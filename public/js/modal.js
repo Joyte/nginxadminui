@@ -1,0 +1,168 @@
+class MonacoModalManager {
+    constructor() {
+        this._spawnModalCSS();
+    }
+
+    _spawnModalCSS() {
+        if (document.getElementById("monacoModalCSS")) {
+            return;
+        }
+
+        let css = document.createElement("style");
+        css.id = "monacoModalCSS";
+        css.innerHTML = /*css*/ `
+            #monacoModal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 100;
+            }
+
+            #monacoModal .modal-content {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: white;
+                padding: 20px;
+                border-radius: 5px;
+                width: 80%;
+                height: 80vh;
+                overflow-y: auto;
+                background-color: var(--background-color)
+            }
+
+            #monacoModal .modal-content .monaco_titlebar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            #monacoModal .modal-content .monaco_titlebar i {
+                cursor: pointer;
+                font-size: 2.5rem;
+                margin-right: 1rem;
+            }
+
+            #monacoModal .modal-content .monaco_titlebar #monaco_exit:hover {
+                color: var(--tertiary-background-color);
+            }
+
+            #monacoModal .modal-content .monaco_titlebar #monaco_save.saved {
+                color: var(--success-color);
+            }
+
+            #monacoModal .modal-content .monaco_titlebar #monaco_save.saved:hover {
+                color: var(--success-color-hover);
+            }
+
+            #monacoModal .modal-content .monaco_titlebar #monaco_save:not(.saved) {
+                color: var(--error-color);
+            }
+
+            #monacoModal .modal-content .monaco_titlebar #monaco_save:not(.saved):hover {
+                color: var(--error-color-hover);
+            }
+
+            #monaco_titlebar {
+                height: 10%;
+            }
+
+            #monaco_filename {
+                margin-bottom: 10px;
+                font-size: 3rem;
+            }
+
+            #monaco-container {
+                height: 90%;
+                border: 1px solid #000;
+            }
+        `;
+        document.head.appendChild(css);
+    }
+
+    _spawnModal() {
+        let modal = document.createElement("div");
+        modal.id = "monacoModal";
+        modal.innerHTML = /*html*/ `
+            <div class="modal-content">
+                <div class="monaco_titlebar">
+                    <h3 id="monaco_filename">unknown_file_name.conf</h3>
+                    <div>
+                        <i id="monaco_save" class="fa-solid fa-floppy-disk"></i>
+                        <i id="monaco_exit" class="fa-solid fa-xmark"></i>
+                    </div>
+                </div>
+                <div id="monaco-container"></div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById("monaco_exit").addEventListener("click", () => {
+            this.dismissModal();
+        });
+    }
+
+    summonModal(filename, content, saveCallback) {
+        if (document.getElementById("monacoModal")) {
+            this.dismissModal();
+        } else {
+            this._spawnModal();
+        }
+
+        document.getElementById("monaco_save").addEventListener("click", () => {
+            let value = monaco.editor.getModels()[0].getValue();
+            saveCallback(value);
+            window.monacoEditorContent = value;
+            this.checkSaveState();
+        });
+
+        document.getElementById("monaco_filename").innerText = filename;
+        document.getElementById("monacoModal").style.display = "block";
+
+        monacotheme =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: light)").matches
+                ? "nginx-theme"
+                : "nginx-theme-dark";
+
+        monaco.editor.create(document.getElementById("monaco-container"), {
+            value: content,
+            language: "nginx",
+            theme: monacotheme,
+            scrollBeyondLastLine: false,
+            cursorSmoothCaretAnimation: "off",
+            fontSize: 16,
+            automaticLayout: true,
+        });
+
+        window.monacoEditorContent = content;
+        document.getElementById("monaco_save").classList.add("saved");
+
+        window.monacoKeyUpEvent = monaco.editor.getEditors()[0].onKeyUp(() => {
+            this.checkSaveState();
+        });
+    }
+
+    checkSaveState() {
+        if (
+            window.monacoEditorContent !==
+            monaco.editor.getModels()[0].getValue()
+        ) {
+            document.getElementById("monaco_save").classList.remove("saved");
+        } else {
+            document.getElementById("monaco_save").classList.add("saved");
+        }
+    }
+
+    dismissModal() {
+        window.monacoKeyUpEvent.dispose();
+        document.getElementById("monacoModal").remove();
+        monaco.editor.getEditors()[0].dispose();
+    }
+}

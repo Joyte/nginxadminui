@@ -1,0 +1,163 @@
+<style>
+    main {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-content: center;
+        flex-wrap: wrap;
+    }
+
+    article {
+        height: 200px;
+        width: 300px;
+
+        background-color: var(--tertiary-background-color);
+        margin: 1rem;
+        padding: 1rem;
+        border: 3px solid var(--secondary-background-color);
+        border-radius: 5px;
+    }
+
+    article hr {
+        margin: 0.3rem -1rem;
+        border: 2px solid var(--secondary-background-color);
+    }
+
+    article pre {
+        font-family: monospace, monospace;
+        white-space: pre;
+        overflow: hidden;
+        font-size: 1.1rem;
+    }
+
+    article div {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    article div i {
+        cursor: pointer;
+        margin: 0.5rem;
+        font-size: 1.5rem;
+    }
+
+    article div i.active-toggle.on {
+        color: var(--success-color);
+    }
+
+    article div i.active-toggle.on:hover {
+        color: var(--success-color-hover);
+    }
+
+    article div i.active-toggle.off {
+        color: var(--error-color);
+    }
+
+    article div i.active-toggle.off:hover {
+        color: var(--error-color-hover);
+    }
+</style>
+
+<script>
+    if (typeof makeElementsEditable === 'undefined') {
+        var makeElementsEditable = () => {
+            $('.active-toggle').on('click', function () {
+                let enabled = $(this).hasClass('on');
+                let filename = $(this).closest('article').find('h1').text();
+                $.ajax({
+                    url: '/api/nginx/site/' + filename + '/enabled?enabled=' + (enabled ? '0' : '1'),
+                    method: 'PUT',
+                    success: (data) => {
+                        $(this).toggleClass('on off');
+                        $(this).toggleClass('fa-toggle-on fa-toggle-off');
+                    },
+                });
+            });
+
+            $('.edit').on('click', function () {
+                let filename = $(this).closest('article').find('h1').text();
+                $.ajax({
+                    url: '/api/nginx/site/' + filename,
+                    beforeSend: () => {
+                        spaManager.setLoading(true)
+                    },
+                    success: (data) => {
+                        monacoModal.summonModal(filename, data["content"], (newcontent) => {
+                            $.ajax({
+                                url: '/api/nginx/site/' + filename,
+                                method: 'PUT',
+                                contentType: "application/json; charset=utf-8",
+                                dataType: "json",
+                                data: JSON.stringify({
+                                    content: newcontent
+                                }),
+                                beforeSend: () => {
+                                    spaManager.setLoading(true)
+                                },
+                                success: (data) => {
+                                    updateHosts();
+                                },
+                                complete: () => {
+                                    spaManager.setLoading(false)
+                                },
+                            });
+
+                        });
+                    },
+                    complete: () => {
+                        spaManager.setLoading(false)
+                    },
+                });
+            });
+
+            monacotheme =
+                window.matchMedia &&
+                    window.matchMedia("(prefers-color-scheme: light)").matches
+                    ? "nginx-theme"
+                    : "nginx-theme-dark";
+
+            $("article pre").each(function (index, element) {
+                monaco.editor.colorizeElement(element, { theme: monacotheme, language: "nginx" });
+            });
+        }
+    }
+
+    if (typeof updateHosts === 'undefined') {
+        var updateHosts = () => {
+            $("article").remove();
+            $.ajax({
+                url: '/api/nginx/sites',
+                beforeSend: () => {
+                    spaManager.setLoading(true)
+                },
+                success: (data) => {
+                    $.each(data["sites"], (index, sitedata) => {
+                        let article = document.createElement('article');
+                        article.innerHTML = /*html*/`
+                        <div>
+                            <h1>${sitedata["filename"]}</h1>
+                            <div>
+                                <i class="${sitedata["enabled"] ? 'on' : 'off'} active-toggle fa-solid fa-toggle-${sitedata["enabled"] ? 'on' : 'off'}"></i>
+                                <i class="edit fa-solid fa-pen-to-square"></i>
+                            </div>
+                        </div>
+                        <hr>
+                        <pre data-lang="nginx">${sitedata["content"]}</pre>
+                    `;
+                        $('main').append(article);
+                    });
+                },
+                complete: () => {
+                    makeElementsEditable()
+                    spaManager.setLoading(false)
+                },
+            });
+        }
+    }
+    $(document).on("NAUIPageLoaded", () => {
+        window.monacoModal = new MonacoModalManager();
+        updateHosts();
+    });
+</script>

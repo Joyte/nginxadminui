@@ -1,0 +1,132 @@
+* {
+    font-family: "IBMPlexSans";
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #1e1e1e;
+        --secondary-background-color: #444;
+        --tertiary-background-color: #6a6a6a;
+        --text-color: #ccc;
+        --link-text: #ff69b4;
+        --error-color: #800000;
+        --error-color-hover: #ff0000;
+        --success-color: #17392b;
+        --success-color-hover: #1a7c50;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --background-color: #fffffe;
+        --secondary-background-color: #d9d9d9;
+        --tertiary-background-color: #b3b3b3;
+        --text-color: #333;
+        --link-text: #d00068;
+        --error-color: #ff0000;
+        --error-color-hover: #800000;
+        --success-color: #1a7c50;
+        --success-color-hover: #17392b;
+    }
+}
+
+a {
+    color: var(--link-text);
+}
+
+body {
+    display: flex;
+    min-height: 100vh;
+}
+
+header div {
+    color: var(--text-color);
+}
+
+header div h1 {
+    font-size: 2em;
+    width: 100%;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    user-select: none;
+}
+
+header nav {
+    width: 100%;
+}
+
+header nav ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+header nav ul li {
+    font-weight: 600;
+    /* margin: 0.5rem 0rem; */
+    padding: 1.5rem 0.5rem;
+    text-align: center;
+    user-select: none;
+}
+
+header nav ul li h1 {
+    font-size: 3em;
+    pointer-events: none;
+}
+
+header nav ul li:hover:not(.active):not(.disabled) {
+    background-color: var(--tertiary-background-color);
+    cursor: pointer;
+}
+
+header nav ul li.disabled:hover {
+    background-color: var(--tertiary-background-color);
+    cursor: not-allowed;
+}
+
+header nav ul li.active {
+    background-color: var(--background-color);
+}
+
+header nav ul li {
+    color: var(--text-color);
+}
+
+header {
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: var(--secondary-background-color);
+}
+
+main {
+    width: 80%;
+    background-color: var(--background-color);
+}
+
+.center-both {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+}
+
+.credit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    font-size: 1.3rem;
+}
+
+.credit a {
+    text-decoration: none;
+}
