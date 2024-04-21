@@ -93,7 +93,7 @@ class MonacoModalManager {
         modal.innerHTML = /*html*/ `
             <div class="modal-content">
                 <div class="monaco_titlebar">
-                    <h3 id="monaco_filename">unknown_file_name.conf</h3>
+                    <h3 id="monaco_filename" contenteditable>unknown_file_name.conf</h3>
                     <div>
                         <i id="monaco_save" class="fa-solid fa-floppy-disk"></i>
                         <i id="monaco_exit" class="fa-solid fa-xmark"></i>
@@ -122,9 +122,12 @@ class MonacoModalManager {
                 return;
             }
 
+            let filename = $("#monaco_filename").text();
             let value = monaco.editor.getModels()[0].getValue();
-            saveCallback(value);
+
+            saveCallback(value, filename);
             window.monacoEditorContent = value;
+            window.monacoEditorFilename = filename;
             this.checkSaveState();
         });
 
@@ -148,20 +151,33 @@ class MonacoModalManager {
         });
         if (newfile) {
             window.monacoEditorContent = null;
+            window.monacoEditorFilename = null;
         } else {
             window.monacoEditorContent = content;
+            window.monacoEditorFilename = filename;
             document.getElementById("monaco_save").classList.add("saved");
         }
 
         window.monacoKeyUpEvent = monaco.editor.getEditors()[0].onKeyUp(() => {
             this.checkSaveState();
         });
+
+        $("#monaco_filename").on("input", () => {
+            this.checkSaveState();
+        });
+
+        monaco.editor
+            .getEditors()[0]
+            .addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+                $("#monaco_save").click();
+            });
     }
 
     checkSaveState() {
         if (
             window.monacoEditorContent !==
-            monaco.editor.getModels()[0].getValue()
+                monaco.editor.getModels()[0].getValue() ||
+            window.monacoEditorFilename !== $("#monaco_filename").text()
         ) {
             document.getElementById("monaco_save").classList.remove("saved");
         } else {

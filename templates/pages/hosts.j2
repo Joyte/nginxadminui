@@ -18,6 +18,11 @@
         border-radius: 5px;
     }
 
+    article h1 {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     article hr {
         margin: 0.3rem -1rem;
         border: 2px solid var(--secondary-background-color);
@@ -41,6 +46,22 @@
         cursor: pointer;
         margin: 0.5rem;
         font-size: 1.5rem;
+    }
+
+    article div i.edit {
+        color: var(--text-color);
+    }
+
+    article div i.edit:hover {
+        color: var(--background-color);
+    }
+
+    article div i.delete {
+        color: var(--text-color);
+    }
+
+    article div i.delete:hover {
+        color: var(--background-color);
     }
 
     article div i.active-toggle.on {
@@ -103,14 +124,15 @@
                         spaManager.setLoading(true)
                     },
                     success: (data) => {
-                        monacoModal.summonModal(filename, data["content"], (newcontent) => {
+                        monacoModal.summonModal(filename, data["content"], (newcontent, newfilename) => {
                             $.ajax({
                                 url: '/api/nginx/site/' + filename,
                                 method: 'PUT',
                                 contentType: "application/json; charset=utf-8",
                                 dataType: "json",
                                 data: JSON.stringify({
-                                    content: newcontent
+                                    content: newcontent,
+                                    filename: newfilename
                                 }),
                                 beforeSend: () => {
                                     spaManager.setLoading(true)
@@ -124,6 +146,28 @@
                             });
 
                         });
+                    },
+                    complete: () => {
+                        spaManager.setLoading(false)
+                    },
+                });
+            });
+
+            $('.delete').on('click', function () {
+                let filename = $(this).closest('article').find('h1').text();
+
+                if (!confirm("Are you sure you want to delete " + filename + "?")) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/nginx/site/' + filename,
+                    method: 'DELETE',
+                    beforeSend: () => {
+                        spaManager.setLoading(true)
+                    },
+                    success: (data) => {
+                        updateHosts();
                     },
                     complete: () => {
                         spaManager.setLoading(false)
@@ -161,6 +205,7 @@
                             <div>
                                 <i class="${sitedata["enabled"] ? 'on' : 'off'} active-toggle fa-solid fa-toggle-${sitedata["enabled"] ? 'on' : 'off'}"></i>
                                 <i class="edit fa-solid fa-pen-to-square"></i>
+                                <i class="delete fa-solid fa-trash"></i>
                             </div>
                         </div>
                         <hr>
@@ -181,7 +226,7 @@
         updateHosts();
 
         $('#create-new').on('click', () => {
-            monacoModal.summonModal("mysite.conf", "# Your nginx code here.....\n", (newcontent) => {
+            monacoModal.summonModal("mysite.conf", "# Your nginx code here.....\n", (newcontent, filename) => {
                 $.ajax({
                     url: '/api/nginx/site/mysite.conf',
                     method: 'POST',

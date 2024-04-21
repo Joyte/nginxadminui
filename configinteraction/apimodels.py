@@ -1,5 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
+from typing import Optional
 
 
 class pagecontent(str, Enum):
@@ -12,5 +13,10 @@ class pagecontent(str, Enum):
     settings = "settings"
 
 
-class ContentInBody(BaseModel):
+class CreateSiteContent(BaseModel):
     content: str
+
+
+class EditSiteContent(BaseModel):
+    content: Optional[str] | None = None
+    filename: Optional[str] | None = None

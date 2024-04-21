@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, staticfiles, APIRouter
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from configinteraction.apimodels import pagecontent, ContentInBody
+from configinteraction.apimodels import pagecontent, CreateSiteContent, EditSiteContent
 from library.nginxconfig import NginxConfig
 from dotenv import load_dotenv
 from os import getenv
@@ -67,14 +67,19 @@ async def getsite(filename: str):
 
 
 @nginx.post("/site/{filename}")
-async def createsite(filename: str, data: ContentInBody):
+async def createsite(filename: str, data: CreateSiteContent):
     nginxconfig.create_site(filename, data.content)
     return {"message": "Site created successfully"}
 
 
 @nginx.put("/site/{filename}")
-async def editsite(filename: str, data: ContentInBody):
-    nginxconfig.edit_file(filename, data.content)
+async def editsite(filename: str, data: EditSiteContent):
+    if data.content:
+        nginxconfig.edit_file(filename, data.content)
+
+    if data.filename:
+        nginxconfig.rename_file(filename, data.filename)
+
     return {"message": "Site edited successfully"}
 
 

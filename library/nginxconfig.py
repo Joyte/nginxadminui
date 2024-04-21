@@ -38,6 +38,24 @@ class NginxConfig:
         with open(f"{self.sites_available}/{filename}", "w") as f:
             f.write(content)
 
+    def rename_file(self, old_filename: str, new_filename: str):
+        """
+        Rename a file in the sites-available directory.
+        """
+        if self.check_site_enabled(old_filename):
+            self.disable_site(old_filename)
+            enabled = True
+        else:
+            enabled = False
+
+        os.rename(
+            f"{self.sites_available}/{old_filename}",
+            f"{self.sites_available}/{new_filename}",
+        )
+
+        if enabled:
+            self.enable_site(new_filename)
+
     def enable_site(self, filename: str):
         """
         Enable a site by creating a symlink in the sites-enabled directory.
