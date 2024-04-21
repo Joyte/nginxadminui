@@ -12,5 +12,5 @@ class pagecontent(str, Enum):
     settings = "settings"
 
 
-class EditSiteUpdate(BaseModel):
+class ContentInBody(BaseModel):
     content: str

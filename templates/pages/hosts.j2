@@ -58,6 +58,25 @@
     article div i.active-toggle.off:hover {
         color: var(--error-color-hover);
     }
+
+    #create-new {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+
+        background-color: var(--secondary-background-color);
+        color: var(--primary-color);
+        border: 3px solid var(--tertiary-background-color);
+        padding: 1rem;
+        border-radius: 25%;
+        font-size: 2rem;
+        cursor: pointer;
+    }
+
+    #create-new:hover {
+        background-color: var(--tertiary-background-color);
+        color: var(--secondary-background-color);
+    }
 </style>
 
 <script>
@@ -133,6 +152,7 @@
                     spaManager.setLoading(true)
                 },
                 success: (data) => {
+                    window.sites = data["sites"];
                     $.each(data["sites"], (index, sitedata) => {
                         let article = document.createElement('article');
                         article.innerHTML = /*html*/`
@@ -159,5 +179,32 @@
     $(document).on("NAUIPageLoaded", () => {
         window.monacoModal = new MonacoModalManager();
         updateHosts();
+
+        $('#create-new').on('click', () => {
+            monacoModal.summonModal("mysite.conf", "# Your nginx code here.....\n", (newcontent) => {
+                $.ajax({
+                    url: '/api/nginx/site/mysite.conf',
+                    method: 'POST',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        content: newcontent
+                    }),
+                    beforeSend: () => {
+                        spaManager.setLoading(true)
+                    },
+                    success: (data) => {
+                        updateHosts();
+                    },
+                    complete: () => {
+                        spaManager.setLoading(false)
+                    },
+                });
+            }, true);
+        });
     });
 </script>
+
+<div id="create-new">
+    <i class="fa-solid fa-plus"></i>
+</div>

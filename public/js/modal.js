@@ -43,13 +43,13 @@ class MonacoModalManager {
             }
 
             #monacoModal .modal-content .monaco_titlebar i {
-                cursor: pointer;
                 font-size: 2.5rem;
                 margin-right: 1rem;
             }
 
             #monacoModal .modal-content .monaco_titlebar #monaco_exit:hover {
                 color: var(--tertiary-background-color);
+                cursor: pointer;
             }
 
             #monacoModal .modal-content .monaco_titlebar #monaco_save.saved {
@@ -58,6 +58,7 @@ class MonacoModalManager {
 
             #monacoModal .modal-content .monaco_titlebar #monaco_save.saved:hover {
                 color: var(--success-color-hover);
+                cursor: not-allowed;
             }
 
             #monacoModal .modal-content .monaco_titlebar #monaco_save:not(.saved) {
@@ -66,6 +67,7 @@ class MonacoModalManager {
 
             #monacoModal .modal-content .monaco_titlebar #monaco_save:not(.saved):hover {
                 color: var(--error-color-hover);
+                cursor: pointer;
             }
 
             #monaco_titlebar {
@@ -108,14 +110,18 @@ class MonacoModalManager {
         });
     }
 
-    summonModal(filename, content, saveCallback) {
+    summonModal(filename, content, saveCallback, newfile = false) {
         if (document.getElementById("monacoModal")) {
             this.dismissModal();
         } else {
             this._spawnModal();
         }
 
-        document.getElementById("monaco_save").addEventListener("click", () => {
+        $("#monaco_save").click(() => {
+            if ($("#monaco_save").hasClass("saved")) {
+                return;
+            }
+
             let value = monaco.editor.getModels()[0].getValue();
             saveCallback(value);
             window.monacoEditorContent = value;
@@ -140,9 +146,12 @@ class MonacoModalManager {
             fontSize: 16,
             automaticLayout: true,
         });
-
-        window.monacoEditorContent = content;
-        document.getElementById("monaco_save").classList.add("saved");
+        if (newfile) {
+            window.monacoEditorContent = null;
+        } else {
+            window.monacoEditorContent = content;
+            document.getElementById("monaco_save").classList.add("saved");
+        }
 
         window.monacoKeyUpEvent = monaco.editor.getEditors()[0].onKeyUp(() => {
             this.checkSaveState();
