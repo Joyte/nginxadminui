@@ -6,6 +6,9 @@ from configinteraction.apimodels import pagecontent, EditSiteUpdate
 from library.nginxconfig import NginxConfig
 from dotenv import load_dotenv
 from os import getenv
+import os
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 load_dotenv()
 
