@@ -56,6 +56,23 @@ async def index(request: Request):
     )
 
 
+@nginx.post("/reload")
+async def reloadnginx():
+    """
+    Reload the nginx service.
+    """
+    result = nginxconfig.reload_nginx()
+    if result == True:
+        return {"message": "Nginx reloaded successfully"}
+
+    return JSONResponse(
+        content={
+            "message": str(result),
+        },
+        status_code=400,
+    )
+
+
 @nginx.get("/sites")
 async def getsites():
     return {"sites": nginxconfig.list_files()}

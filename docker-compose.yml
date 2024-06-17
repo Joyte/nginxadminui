@@ -1,0 +1,14 @@
+name: nginxadminui
+
+services:
+   main-server:
+      container_name: nginxadminui
+      image: joyte/nginxadminui:latest
+      volumes:
+         - "./sites_available:/etc/nginx/sites-available"
+         - "./html:/var/www/html"
+      restart: always
+      ports:
+         - "80:80"
+         - "81:81"
+         - "443:443"

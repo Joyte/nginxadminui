@@ -6,22 +6,15 @@ In it's current state, it only provides a simple way to edit the configuration f
 
 In the future, it will provide more interesting features like custom access lists, using Certbot to generate SSL certificates, viewing the Nginx logs, etc.
 
-It will also be installable using a docker compose, so you can easily deploy it in your server.
+## WARNING!
+This is a work in progress, and shouldn't be used in production environments.
+Do not expose port 81 to the internet, as the admin UI will be accessible to anyone.
 
 ## Installation
-* Clone the repository
-* Install the dependencies
-```bash
-python -m pip install -r requirements.txt
-```
-* Run the server
-```bash
-uvicorn main:app --app-dir %YOUR_CLONED_REPOSITORY_PATH%
-```
-
-## Configuration
-Copy `.env-example` to `.env` and edit the values to match your configuration.
+* Copy `docker-compose.yml` to a dedicated folder in your server
+* Run `docker compose up -d`
+* Done! Navigate to `http://localhost:81` to access the web UI
 
 ## Documentation
 
-Documentation is available at [https://nginxadminui.com](https://nginxadminui.com)
+Full documentation is available at [https://nginxadminui.com](https://nginxadminui.com)

@@ -98,6 +98,39 @@
         background-color: var(--tertiary-background-color);
         color: var(--secondary-background-color);
     }
+
+    #reload-nginx {
+        position: fixed;
+        bottom: 2rem;
+        right: 7rem;
+
+        border: 3px solid;
+        padding: 1rem;
+        border-radius: 25%;
+        font-size: 2rem;
+        cursor: pointer;
+    }
+
+    #reload-nginx.need-reload {
+        background-color: var(--error-color-hover);
+        border-color: var(--error-color);
+        animation: shake 0.5s;
+    }
+
+    #reload-nginx.need-reload:hover {
+        background-color: var(--error-color);
+        border-color: var(--error-color-hover);
+    }
+
+    #reload-nginx:not(.need-reload) {
+        background-color: var(--success-color-hover);
+        border-color: var(--success-color);
+    }
+
+    #reload-nginx:not(.need-reload):hover {
+        background-color: var(--success-color);
+        border-color: var(--success-color-hover);
+    }
 </style>
 
 <script>
@@ -112,6 +145,7 @@
                     success: (data) => {
                         $(this).toggleClass('on off');
                         $(this).toggleClass('fa-toggle-on fa-toggle-off');
+                        needToReload();
                     },
                 });
             });
@@ -139,6 +173,7 @@
                                 },
                                 success: (data) => {
                                     updateHosts();
+                                    needToReload();
                                 },
                                 complete: () => {
                                     spaManager.setLoading(false)
@@ -168,6 +203,7 @@
                     },
                     success: (data) => {
                         updateHosts();
+                        needToReload();
                     },
                     complete: () => {
                         spaManager.setLoading(false)
@@ -221,6 +257,15 @@
             });
         }
     }
+
+    if (typeof needToReload === 'undefined') {
+        var needToReload = () => {
+            if (!$('#reload-nginx').hasClass('need-reload')) {
+                $('#reload-nginx').addClass('need-reload');
+            }
+        }
+    }
+
     $(document).on("NAUIPageLoaded", () => {
         window.monacoModal = new MonacoModalManager();
         updateHosts();
@@ -228,7 +273,7 @@
         $('#create-new').on('click', () => {
             monacoModal.summonModal("mysite.conf", "# Your nginx code here.....\n", (newcontent, filename) => {
                 $.ajax({
-                    url: '/api/nginx/site/mysite.conf',
+                    url: `/api/nginx/site/${filename}`,
                     method: 'POST',
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
@@ -240,6 +285,7 @@
                     },
                     success: (data) => {
                         updateHosts();
+                        needToReload();
                     },
                     complete: () => {
                         spaManager.setLoading(false)
@@ -247,9 +293,31 @@
                 });
             }, true);
         });
+
+        $('#reload-nginx').on('click', () => {
+            $.ajax({
+                url: '/api/nginx/reload',
+                method: 'POST',
+                beforeSend: () => {
+                    spaManager.setLoading(true)
+                },
+                success: (data) => {
+                    $('#reload-nginx').removeClass('need-reload');
+                },
+                complete: () => {
+                    spaManager.setLoading(false)
+                },
+                error: (data) => {
+                    alert("Failed to reload nginx: " + data.responseJSON.message);
+                },
+            });
+        });
     });
 </script>
 
 <div id="create-new">
     <i class="fa-solid fa-plus"></i>
+</div>
+<div id="reload-nginx">
+    <i class="fa-solid fa-sync"></i>
 </div>

@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 
 class NginxConfig:
@@ -9,6 +10,28 @@ class NginxConfig:
     def __init__(self, sites_available: str, sites_enabled: str):
         self.sites_available = sites_available
         self.sites_enabled = sites_enabled
+
+    def reload_nginx(self):
+        """
+        Check the nginx config and reload the service if it is valid.
+        """
+        try:
+            result = subprocess.run(
+                ["nginx", "-t"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
+        except Exception as e:
+            return str(e)
+        if result.returncode == 0:
+            try:
+                subprocess.run(["service", "nginx", "reload"])
+            except Exception as e:
+                return str(e)
+            return True
+        else:
+            return result.stderr
 
     def list_files(self):
         """
