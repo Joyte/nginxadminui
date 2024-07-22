@@ -6,10 +6,11 @@ from typing import Optional
 class pagecontent(str, Enum):
     home = "home"
     hosts = "hosts"
+    filemanager = "filemanager"
     accesslists = "accesslists"
     sslcerts = "sslcerts"
     users = "users"
-    auditlog = "auditlog"
+    logs = "logs"
     settings = "settings"
 
 

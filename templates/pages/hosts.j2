@@ -140,7 +140,7 @@
                 let enabled = $(this).hasClass('on');
                 let filename = $(this).closest('article').find('h1').text();
                 $.ajax({
-                    url: '/api/nginx/site/' + filename + '/enabled?enabled=' + (enabled ? '0' : '1'),
+                    url: '/api/hosts/' + filename + '/enabled?enabled=' + (enabled ? '0' : '1'),
                     method: 'PUT',
                     success: (data) => {
                         $(this).toggleClass('on off');
@@ -153,14 +153,14 @@
             $('.edit').on('click', function () {
                 let filename = $(this).closest('article').find('h1').text();
                 $.ajax({
-                    url: '/api/nginx/site/' + filename,
+                    url: '/api/hosts/' + filename,
                     beforeSend: () => {
                         spaManager.setLoading(true)
                     },
                     success: (data) => {
                         monacoModal.summonModal(filename, data["content"], (newcontent, newfilename) => {
                             $.ajax({
-                                url: '/api/nginx/site/' + filename,
+                                url: '/api/hosts/' + filename,
                                 method: 'PUT',
                                 contentType: "application/json; charset=utf-8",
                                 dataType: "json",
@@ -196,7 +196,7 @@
                 }
 
                 $.ajax({
-                    url: '/api/nginx/site/' + filename,
+                    url: '/api/hosts/' + filename,
                     method: 'DELETE',
                     beforeSend: () => {
                         spaManager.setLoading(true)
@@ -227,7 +227,7 @@
         var updateHosts = () => {
             $("article").remove();
             $.ajax({
-                url: '/api/nginx/sites',
+                url: '/api/hosts',
                 beforeSend: () => {
                     spaManager.setLoading(true)
                 },
@@ -248,6 +248,16 @@
                         <pre data-lang="nginx">${sitedata["content"]}</pre>
                     `;
                         $('main').append(article);
+                    });
+
+                    $.ajax({
+                        url: '/api/hosts/reload',
+                        method: 'GET',
+                        success: (data) => {
+                            if (data["reload"]) {
+                                $('#reload-nginx').addClass('need-reload');
+                            }
+                        },
                     });
                 },
                 complete: () => {
@@ -273,7 +283,7 @@
         $('#create-new').on('click', () => {
             monacoModal.summonModal("mysite.conf", "# Your nginx code here.....\n", (newcontent, filename) => {
                 $.ajax({
-                    url: `/api/nginx/site/${filename}`,
+                    url: `/api/hosts/${filename}`,
                     method: 'POST',
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
@@ -296,7 +306,7 @@
 
         $('#reload-nginx').on('click', () => {
             $.ajax({
-                url: '/api/nginx/reload',
+                url: '/api/hosts/reload',
                 method: 'POST',
                 beforeSend: () => {
                     spaManager.setLoading(true)

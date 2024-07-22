@@ -85,6 +85,10 @@ header nav ul li:hover:not(.active):not(.disabled) {
     cursor: pointer;
 }
 
+header nav ul li.disabled {
+    background-color: #303030;
+}
+
 header nav ul li.disabled:hover {
     background-color: var(--tertiary-background-color);
     cursor: not-allowed;

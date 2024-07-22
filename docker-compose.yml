@@ -12,3 +12,17 @@ services:
          - "80:80"
          - "81:81"
          - "443:443"
+   db:
+      image: mariadb:latest
+      container_name: mariadb
+      environment:
+         MYSQL_ROOT_PASSWORD: 6YFHqehrHD6X3GCM
+         MYSQL_DATABASE: main_db
+         MYSQL_USER: nginxadminui
+         MYSQL_PASSWORD: cuzw2pKMsEjmeuLb
+      volumes:
+         - db_data:/var/lib/mysql
+      restart: always
+
+volumes:
+   db_data:
