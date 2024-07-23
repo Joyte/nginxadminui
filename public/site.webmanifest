@@ -1,6 +1,6 @@
 {
-    "name": "Nginx Admin UI",
-    "short_name": "NAUI",
+    "name": "",
+    "short_name": "",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
@@ -13,7 +13,7 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#C98E14",
-    "background_color": "#B35507",
+    "theme_color": "#16994D",
+    "background_color": "#1E1E1E",
     "display": "standalone"
 }

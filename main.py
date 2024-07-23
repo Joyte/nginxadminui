@@ -9,20 +9,23 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv()
 
-from extensions.hosts import hosts
+from extensions import hosts, logs, filemanager
 
 
 templates = Jinja2Templates(directory="templates")
 
 app = FastAPI(
-    # docs_url=None,
     redoc_url=None,
-    # openapi_url=None,
+)
+
+pages = APIRouter(
+    prefix="",
+    tags=["Pages API"],
 )
 
 
-@app.get("/api/page/{page}")
-async def getpage(page: pagecontent, request: Request):
+@pages.get("/api/page/{page}")
+async def get_page(page: pagecontent, request: Request):
     return templates.TemplateResponse(
         f"pages/{page.value}.j2",
         {
@@ -31,7 +34,7 @@ async def getpage(page: pagecontent, request: Request):
     )
 
 
-@app.get("/")
+@pages.get("/")
 async def redirect():
     """
     Redirect to the home page.
@@ -39,7 +42,7 @@ async def redirect():
     return RedirectResponse(url="/page/home")
 
 
-@app.get("/page/{page}")
+@pages.get("/page/{page}")
 async def index(request: Request):
     return templates.TemplateResponse(
         "index.j2",
@@ -71,6 +74,9 @@ async def exception_handler(request: Request, exc: StarletteHTTPException):
     )
 
 
-# Add static files to the app
+# Add routes & static files to the app
+app.include_router(pages)
 app.include_router(hosts)
+app.include_router(filemanager)
+app.include_router(logs)
 app.mount("/", staticfiles.StaticFiles(directory="public"), name="public")

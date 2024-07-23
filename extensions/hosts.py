@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from starlette.responses import JSONResponse
 from configinteraction.apimodels import CreateSiteContent, EditSiteContent
-from extensions.nginxconfig import NginxConfig
+from . import NginxConfig
 from database.hosts import Data, Logs, get_db, Session
 import time
 from os import getenv
@@ -13,18 +13,18 @@ nginxconfig = NginxConfig(
 
 hosts = APIRouter(
     prefix="/api/hosts",
-    tags=["Hosts"],
+    tags=["Hosts API"],
 )
 
 
-def set_nginxreload(db: Session):
+def set_nginx_reload(db: Session):
     if not db.query(Data).filter(Data.id == "nginxreload").first():  # type: ignore
         db.add(Data(id="nginxreload", bool=True))
         db.commit()
 
 
 @hosts.get("/reload")
-async def checkreload(db: Session = Depends(get_db)):
+async def check_reload(db: Session = Depends(get_db)):
     """
     Check if nginx needs to be reloaded.
     """
@@ -35,7 +35,7 @@ async def checkreload(db: Session = Depends(get_db)):
 
 
 @hosts.post("/reload")
-async def reloadnginx(db: Session = Depends(get_db)):
+async def reload_nginx(db: Session = Depends(get_db)):
     """
     Reload the nginx service.
     """
@@ -44,7 +44,7 @@ async def reloadnginx(db: Session = Depends(get_db)):
         db.add(
             Logs(
                 id=time.strftime("%Y-%m-%d %H:%M:%S"),
-                importance=1,
+                importance=2,
                 value="Nginx successfully reloaded",
             )
         )
@@ -53,7 +53,7 @@ async def reloadnginx(db: Session = Depends(get_db)):
         if data:
             db.delete(data)
             db.commit()
-            return {"message": "Nginx reloaded successfully"}
+        return {"message": "Nginx reloaded successfully"}
 
     db.add(
         Logs(
@@ -62,6 +62,7 @@ async def reloadnginx(db: Session = Depends(get_db)):
             value="Nginx failed to reload: " + str(result),
         )
     )
+    db.commit()
     return JSONResponse(
         content={
             "message": str(result),
@@ -71,56 +72,58 @@ async def reloadnginx(db: Session = Depends(get_db)):
 
 
 @hosts.get("")
-async def getsites():
+async def get_sites():
     return {"sites": nginxconfig.list_files()}
 
 
 @hosts.get("/{filename}")
-async def getsite(filename: str):
+async def get_site(filename: str):
     return {"content": nginxconfig.get_file(filename)}
 
 
 @hosts.post("/{filename}")
-async def createsite(
+async def create_site(
     filename: str, data: CreateSiteContent, db: Session = Depends(get_db)
 ):
     nginxconfig.create_site(filename, data.content)
-    set_nginxreload(db)
+    set_nginx_reload(db)
     return {"message": "Site created successfully"}
 
 
 @hosts.put("/{filename}")
-async def editsite(filename: str, data: EditSiteContent, db: Session = Depends(get_db)):
+async def edit_site(
+    filename: str, data: EditSiteContent, db: Session = Depends(get_db)
+):
     if data.content:
         nginxconfig.edit_file(filename, data.content)
 
     if data.filename:
         nginxconfig.rename_file(filename, data.filename)
 
-    set_nginxreload(db)
+    set_nginx_reload(db)
 
     return {"message": "Site edited successfully"}
 
 
 @hosts.delete("/{filename}")
-async def deletesite(filename: str, db: Session = Depends(get_db)):
+async def delete_site(filename: str, db: Session = Depends(get_db)):
     nginxconfig.delete_site(filename)
-    set_nginxreload(db)
+    set_nginx_reload(db)
     return {"message": "Site deleted successfully"}
 
 
 @hosts.get("/{filename}/enabled")
-async def checksiteenabled(filename: str):
+async def check_site_enabled(filename: str):
     return {"enabled": nginxconfig.check_site_enabled(filename)}
 
 
 @hosts.put("/{filename}/enabled")
-async def togglesite(filename: str, enabled: bool, db: Session = Depends(get_db)):
+async def toggle_site(filename: str, enabled: bool, db: Session = Depends(get_db)):
     if enabled:
         nginxconfig.enable_site(filename)
     else:
         nginxconfig.disable_site(filename)
 
-    set_nginxreload(db)
+    set_nginx_reload(db)
 
     return {"message": "Site enabled successfully"}

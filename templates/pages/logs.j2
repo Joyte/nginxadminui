@@ -1,1 +1,76 @@
-<h1>Logs</h1>
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+
+    }
+
+    thead {
+        font-size: 2em;
+    }
+
+    td {
+        border: 1px solid black;
+        padding: 10px;
+    }
+
+    .severity-3 {
+        background-color: var(--severity-three);
+    }
+
+    .severity-2 {
+        background-color: var(--severity-two);
+    }
+
+    .severity-1 {
+        background-color: var(--severity-one);
+    }
+
+    #time-log-header {
+        width: 180px;
+    }
+</style>
+
+<script>
+
+    function formatTime(timedate) {
+        // Take a date string like this: 2024-07-23T21:11:14
+        // And return a string like this: 23/07/2024 21:11:14
+        const date = new Date(timedate);
+        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+    }
+
+    $(document).on("NAUIPageLoaded", () => {
+
+        $.ajax({
+            url: "/api/logs",
+            type: "GET",
+            beforeSend: () => {
+                spaManager.setLoading(true)
+            },
+            success: (data) => {
+                data.forEach((log) => {
+                    let severityClass = "severity-" + log.importance;
+                    $("#log-holder").append(`<tr class="${severityClass}"><td>${formatTime(log.id)}</td><td>${log.value}</td></tr>`)
+                })
+            },
+            complete: () => {
+                spaManager.setLoading(false)
+            },
+            error: (err) => {
+                alert("An error occurred while fetching logs: " + err.responseText);
+            }
+        });
+
+    });
+
+</script>
+
+<table>
+    <thead>
+        <td id="time-log-header">Time</td>
+        <td>Message</td>
+    </thead>
+    <tbody id="log-holder">
+    </tbody>
+</table>

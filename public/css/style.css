@@ -17,6 +17,9 @@
         --error-color-hover: #ff0000;
         --success-color: #17392b;
         --success-color-hover: #1a7c50;
+        --severity-three: #560000;
+        --severity-two: #1e2e1e;
+        --severity-one: #1e1e1e;
     }
 }
 
@@ -31,7 +34,25 @@
         --error-color-hover: #800000;
         --success-color: #1a7c50;
         --success-color-hover: #17392b;
+        --severity-three: #ff5c5c;
+        --severity-two: #ddffdd;
+        --severity-one: #fffffe;
     }
+}
+
+.logo-display {
+    background: url("/logo.svg") no-repeat center center;
+    background-size: contain;
+    height: 50px;
+    width: 50px;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+#navlist li:has(i.logo-display) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 a {
