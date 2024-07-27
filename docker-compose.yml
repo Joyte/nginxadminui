@@ -12,10 +12,22 @@ services:
          - "80:80"
          - "81:81"
          - "443:443"
+      depends_on:
+         - php-fpm
+         - db
+
+   php-fpm:
+      container_name: php-fpm
+      image: php:fpm
+      volumes:
+         - "./html:/var/www/html"
+      restart: always
+
    db:
       image: mariadb:latest
       container_name: mariadb
       environment:
+         # !! Leave the environment variables as is
          MYSQL_ROOT_PASSWORD: 6YFHqehrHD6X3GCM
          MYSQL_DATABASE: main_db
          MYSQL_USER: nginxadminui

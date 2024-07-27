@@ -2,14 +2,14 @@ from fastapi import FastAPI, Request, staticfiles, APIRouter
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from configinteraction.apimodels import pagecontent
+from extensions.apimodels import pagecontent
 from dotenv import load_dotenv
 import os
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv()
 
-from extensions import hosts, logs, filemanager
+from routers import hosts, logs, filemanager
 
 
 templates = Jinja2Templates(directory="templates")
