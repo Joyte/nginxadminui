@@ -11,7 +11,7 @@ filemanagerapi = APIRouter(
     tags=["File Manager API"],
 )
 
-filemanager = Filemanager(www_root=getenv("WWW_ROOT", "/var/www"))
+filemanager = Filemanager(www_root=getenv("WWW_ROOT", "/var/www/html"))
 
 
 @filemanagerapi.get("")
