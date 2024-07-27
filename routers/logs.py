@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from starlette.responses import JSONResponse
-from database.hosts import Logs, get_db, Session
+from extensions.database import Logs, get_db, Session
 
 logs = APIRouter(
     prefix="/api/logs",

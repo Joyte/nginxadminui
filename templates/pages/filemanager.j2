@@ -1,1 +1,280 @@
-<h1>File Manager</h1>
+<style>
+    #article-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: left;
+        margin: 2rem;
+    }
+
+    article {
+        width: 225px;
+        height: 225px;
+        margin: 10px;
+        box-sizing: border-box;
+    }
+
+    article.file {
+        background-color: var(--tertiary-background-color);
+    }
+
+    article:not(.file) {
+        background-color: var(--secondary-background-color);
+    }
+
+    article:hover {
+        cursor: pointer;
+        transform: scale(1.05);
+    }
+
+    article.file:hover {
+        border: 2px solid blue;
+    }
+
+    article.file.selected {
+        border: 2px solid blue;
+    }
+
+    article.file.selected:hover {
+        border: 2px solid blue;
+    }
+
+    article h1 {
+        margin: 0.5rem;
+        font-size: 1.5em;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        overflow: scroll;
+    }
+
+    article div {
+        display: flex;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    article div i {
+        font-size: 8em;
+        margin-top: 1.5rem;
+    }
+</style>
+
+<script>
+    function uploadFiles() {
+        // Open file dialog
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.click();
+
+        input.onchange = () => {
+            const formData = new FormData();
+            for (const file of input.files) {
+                formData.append('files', file);
+            }
+            path = new URLSearchParams(window.location.search).get('path');
+
+            $.ajax({
+                url: "/api/filemanager/" + (path ? path : ""),
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                beforeSend: () => {
+                    spaManager.setLoading(true)
+                },
+                success: (data) => {
+                    spaManager.goToPage("filemanager", { "path": (path ? path : "") })
+                },
+                complete: () => {
+                    spaManager.setLoading(false)
+                },
+                error: (err) => {
+                    alert("An error occurred while uploading file: " + err.responseText);
+                }
+            });
+        }
+
+    }
+
+    function createFolder() {
+        const folderName = prompt("Enter folder name:");
+
+        if (folderName) {
+
+            // Input validation
+            if (folderName.includes("/")) {
+                alert("Folder name cannot contain '/'");
+                return;
+            }
+
+            if (folderName.includes("\\")) {
+                alert("Folder name cannot contain '\\'");
+                return;
+            }
+
+            if (folderName.includes(".")) {
+                alert("Folder name cannot contain '.'");
+                return;
+            }
+
+            if (folderName > 40) {
+                alert("Folder name cannot be longer than 40 characters");
+                return;
+            }
+
+            path = new URLSearchParams(window.location.search).get('path');
+            $.ajax({
+                url: "/api/filemanager/" + (path ? path + "/" : "/") + folderName,
+                type: "PUT",
+                beforeSend: () => {
+                    spaManager.setLoading(true)
+                },
+                success: (data) => {
+                    spaManager.goToPage("filemanager", { "path": (path ? path : "") })
+                },
+                complete: () => {
+                    spaManager.setLoading(false)
+                },
+                error: (err) => {
+                    alert("An error occurred while creating folder: " + err.responseText);
+                }
+            });
+        }
+    }
+
+    function deleteSelectedFiles() {
+        path = new URLSearchParams(window.location.search).get('path');
+
+        $.ajax({
+            url: "/api/filemanager/" + (path ? path : ""),
+            type: "DELETE",
+            data: JSON.stringify({ "files": $("article.file.selected").map((i, e) => $(e).data("name")).get() }),
+            contentType: "application/json",
+            beforeSend: () => {
+                spaManager.setLoading(true)
+            },
+            success: (data) => {
+                spaManager.goToPage("filemanager", { "path": (path ? path : "") })
+            },
+            complete: () => {
+                spaManager.setLoading(false)
+            },
+            error: (err) => {
+                alert("An error occurred while deleting files: " + err.responseText);
+            }
+        });
+    }
+
+    function deleteFolder() {
+        path = new URLSearchParams(window.location.search).get('path');
+
+        $.ajax({
+            url: "/api/filemanager/" + path + "/",
+            type: "DELETE",
+            beforeSend: () => {
+                spaManager.setLoading(true)
+            },
+            success: (data) => {
+                spaManager.goToPage("filemanager", { "path": path.split("/").slice(0, -1).join("/") })
+            },
+            complete: () => {
+                spaManager.setLoading(false)
+            },
+            error: (err) => {
+                alert("An error occurred while deleting folder: " + err.responseText);
+            }
+        });
+    }
+
+    $(document).on("NAUIPageLoaded", () => {
+
+        const path = new URLSearchParams(window.location.search).get('path');
+
+        if (path) {
+            $("#article-container").append(`<article data-action="ascend"><h1>${path}/..</h1><hr><div><i class="fa-solid fa-folder-tree"></i></div></article>`)
+        }
+
+        $.ajax({
+            url: "/api/filemanager" + (path ? "?path=" + path : ""),
+            type: "GET",
+            beforeSend: () => {
+                spaManager.setLoading(true)
+            },
+            success: (data) => {
+                // sort list by directories first, and then alphabetically
+                data.sort((a, b) => {
+                    if (a.is_dir && !b.is_dir) {
+                        return -1;
+                    } else if (!a.is_dir && b.is_dir) {
+                        return 1;
+                    } else {
+                        return a.name.localeCompare(b.name);
+                    }
+                })
+
+                data.forEach((file) => {
+                    if (file.is_dir) {
+                        $("#article-container").append(`<article class="directory" data-name="${file.name}"><h1>${file.name}</h1><hr><div><i class="fa-solid fa-folder-open"></i></div></article>`)
+                    } else {
+                        $("#article-container").append(`<article class="file" data-name="${file.name}" data-size="${file.filesize}"><h1>${file.name}</h1><hr><div><i class="fa-solid fa-file-lines"></i></div></article>`)
+                    }
+                })
+
+                $("#article-container").append(`<article data-action="upload"><h1>Upload</h1><hr><div><i class="fa-solid fa-plus"></i></div></article>`)
+                $("#article-container").append(`<article data-action="createfolder"><h1>Create Folder</h1><hr><div><i class="fa-solid fa-folder-plus"></i></div></article>`)
+                $("#article-container").append(`<article id="delete" data-action="delete"><h1>Delete</h1><hr><div><i class="fa-solid fa-trash"></i></div></article>`)
+            },
+            complete: () => {
+                // If article container has no articles with data-name
+                if ($("#article-container > article[data-name]").length === 0 && $("#article-container > article.directory").length === 0 && path) {
+                    $("#delete").show()
+                } else {
+                    $("#delete").hide()
+                }
+
+                $("article.file").click((e) => {
+                    $(e.target).toggleClass("selected")
+
+                    if ($("article.file.selected").length > 0) {
+                        $("#delete").show()
+                    } else {
+                        $("#delete").hide()
+                    }
+                })
+
+                $("article[data-action]").click((e) => {
+                    if ($(e.target).data("action") === "upload") {
+                        uploadFiles()
+                    } else if ($(e.target).data("action") === "ascend") {
+                        spaManager.goToPage("filemanager", { "path": path.split("/").slice(0, -1).join("/") })
+                    } else if ($(e.target).data("action") === "createfolder") {
+                        createFolder()
+                    }
+                })
+
+                $("article.directory").click((e) => {
+                    spaManager.goToPage("filemanager", { "path": path ? path + "/" + $(e.target).data("name") : $(e.target).data("name") })
+                });
+
+                $("#delete").click((e) => {
+                    if ($("article.file.selected").length > 0) {
+                        deleteSelectedFiles()
+                    } else {
+                        deleteFolder()
+                    }
+                })
+
+                spaManager.setLoading(false)
+            },
+            error: (err) => {
+                alert("An error occurred while fetching logs: " + err.responseText);
+            }
+        });
+
+    });
+
+</script>
+
+<div id="article-container">
+</div>

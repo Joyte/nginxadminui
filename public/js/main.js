@@ -50,7 +50,7 @@ class SinglePageApplicationManager {
         this.loadingManager.setLoading(loading);
     }
 
-    setCurrentPage(pageName) {
+    setCurrentPage(pageName, query) {
         if (this.currentPage) {
             this.currentPage.classList.remove("active");
         }
@@ -58,17 +58,28 @@ class SinglePageApplicationManager {
         this.currentPage = document.querySelector("li[to='" + pageName + "']");
         this.currentPage.classList.add("active");
 
+        // Remove empty query parameters
+        for (const key in query) {
+            if (query[key] === "") {
+                delete query[key];
+            }
+        }
+
+        const queryString = query
+            ? `?${new URLSearchParams(query).toString()}`
+            : "";
+
         window.history.pushState(
             { page: pageName },
             pageName,
-            "/page/" + pageName
+            "/page/" + pageName + (queryString.length == 1 ? "" : queryString)
         );
 
         document.title =
             "Nginx Admin UI - " + $(this.currentPage).attr("display");
     }
 
-    goToPage(pageName) {
+    goToPage(pageName, query = {}) {
         // Call the API using Ajax to get the page content and load it into the main content area
         $.ajax({
             url: "/api/page/" + pageName,
@@ -78,7 +89,7 @@ class SinglePageApplicationManager {
             success: (data) => {
                 $(document).off("NAUIPageLoaded");
                 $("main").html(data);
-                this.setCurrentPage(pageName);
+                this.setCurrentPage(pageName, query);
                 $(document).trigger("NAUIPageLoaded");
             },
             complete: () => {
@@ -109,7 +120,13 @@ class SinglePageApplicationManager {
         if (pageName === "") {
             pageName = "home";
         }
-        this.goToPage(pageName);
+
+        this.goToPage(
+            pageName,
+            Object.fromEntries(
+                new URLSearchParams(window.location.search).entries()
+            )
+        );
     }
 }
 

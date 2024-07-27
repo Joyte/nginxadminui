@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 import socket
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import Integer, Date, Column, Boolean, Text, String, TIMESTAMP
 
 DATABASE_URL = "mysql+pymysql://nginxadminui:cuzw2pKMsEjmeuLb@db/main_db"
 LOCAL_DATABASE_URL = "mysql+pymysql://nginxadminui:cuzw2pKMsEjmeuLb@localhost/main_db"
@@ -30,3 +30,22 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+class Data(Base):
+    __tablename__ = "data"
+
+    id = Column(String(30), primary_key=True, index=True)
+    is_active = Column(Boolean)
+    text = Column(Text)
+
+
+class Logs(Base):
+    __tablename__ = "logs"
+
+    id = Column(TIMESTAMP, primary_key=True, index=True)
+    importance = Column(Integer, index=True)
+    value = Column(Text)
+
+
+Base.metadata.create_all(engine)  # type: ignore

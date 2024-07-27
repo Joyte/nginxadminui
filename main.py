@@ -9,7 +9,7 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv()
 
-from routers import hosts, logs, filemanager
+from routers import hosts, logs, filemanagerapi
 
 
 templates = Jinja2Templates(directory="templates")
@@ -77,6 +77,6 @@ async def exception_handler(request: Request, exc: StarletteHTTPException):
 # Add routes & static files to the app
 app.include_router(pages)
 app.include_router(hosts)
-app.include_router(filemanager)
+app.include_router(filemanagerapi)
 app.include_router(logs)
 app.mount("/", staticfiles.StaticFiles(directory="public"), name="public")

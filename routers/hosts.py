@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from starlette.responses import JSONResponse
 from extensions.apimodels import CreateSiteContent, EditSiteContent
 from extensions import NginxConfig
-from database.hosts import Data, Logs, get_db, Session
+from extensions.database import Data, Logs, get_db, Session
 import time
 from os import getenv
 
@@ -19,7 +19,7 @@ hosts = APIRouter(
 
 def set_nginx_reload(db: Session):
     if not db.query(Data).filter(Data.id == "nginxreload").first():  # type: ignore
-        db.add(Data(id="nginxreload", bool=True))
+        db.add(Data(id="nginxreload", is_active=True))  # type: ignore
         db.commit()
 
 
@@ -42,7 +42,7 @@ async def reload_nginx(db: Session = Depends(get_db)):
     result = nginxconfig.reload_nginx()
     if result == True:
         db.add(
-            Logs(
+            Logs(  # type: ignore
                 id=time.strftime("%Y-%m-%d %H:%M:%S"),
                 importance=2,
                 value="Nginx successfully reloaded",
@@ -56,7 +56,7 @@ async def reload_nginx(db: Session = Depends(get_db)):
         return {"message": "Nginx reloaded successfully"}
 
     db.add(
-        Logs(
+        Logs(  # type: ignore
             id=time.strftime("%Y-%m-%d %H:%M:%S"),
             importance=3,
             value="Nginx failed to reload: " + str(result),

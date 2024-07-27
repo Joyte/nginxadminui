@@ -21,3 +21,7 @@ class CreateSiteContent(BaseModel):
 class EditSiteContent(BaseModel):
     content: Optional[str] | None = None
     filename: Optional[str] | None = None
+
+
+class DeleteFiles(BaseModel):
+    files: list[str]
