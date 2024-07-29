@@ -33,8 +33,5 @@ services:
          MYSQL_USER: nginxadminui
          MYSQL_PASSWORD: cuzw2pKMsEjmeuLb
       volumes:
-         - db_data:/var/lib/mysql
+         - ./db_data:/var/lib/mysql
       restart: always
-
-volumes:
-   db_data:
