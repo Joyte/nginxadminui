@@ -68,15 +68,6 @@ header div {
     color: var(--text-color);
 }
 
-header div h1 {
-    font-size: 2em;
-    width: 100%;
-    margin-top: 1rem;
-    margin-bottom: 2rem;
-    text-align: center;
-    user-select: none;
-}
-
 header nav {
     width: 100%;
 }
@@ -90,14 +81,13 @@ header nav ul {
 
 header nav ul li {
     font-weight: 600;
-    /* margin: 0.5rem 0rem; */
     padding: 1.5rem 0.5rem;
     text-align: center;
     user-select: none;
 }
 
 header nav ul li h1 {
-    font-size: 3em;
+    font-size: 2em;
     pointer-events: none;
 }
 

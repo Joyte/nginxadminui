@@ -224,8 +224,10 @@
                 $("#article-container").append(`<article data-action="upload"><h1>Upload</h1><hr><div><i class="fa-solid fa-plus"></i></div></article>`)
                 $("#article-container").append(`<article data-action="createfolder"><h1>Create Folder</h1><hr><div><i class="fa-solid fa-folder-plus"></i></div></article>`)
                 $("#article-container").append(`<article id="delete" data-action="delete"><h1>Delete</h1><hr><div><i class="fa-solid fa-trash"></i></div></article>`)
+                $("#article-container").append(`<article id="unzip" data-action="unzip"><h1>Unzip Files</h1><hr><div><i class="fa-solid fa-archive"></i></div></article>`)
             },
             complete: () => {
+                $("#unzip").hide()
                 // If article container has no articles with data-name
                 if ($("#article-container > article[data-name]").length === 0 && $("#article-container > article.directory").length === 0 && path) {
                     $("#delete").show()
@@ -235,6 +237,13 @@
 
                 $("article.file").click((e) => {
                     $(e.target).toggleClass("selected")
+
+                    // Check filenames to see if all selected files are zips
+                    if ($("article.file.selected").length > 0 && $("article.file.selected").map((i, e) => $(e).data("name")).get().every((name) => name.endsWith(".zip"))) {
+                        $("#unzip").show();
+                    } else {
+                        $("#unzip").hide();
+                    }
 
                     if ($("article.file.selected").length > 0) {
                         $("#delete").show()
@@ -263,6 +272,29 @@
                     } else {
                         deleteFolder()
                     }
+                })
+
+                $("#unzip").click((e) => {
+                    const files = $("article.file.selected").map((i, e) => $(e).data("name")).get();
+
+                    $.ajax({
+                        url: "/api/filemanager/unzip/" + (path ? path : ""),
+                        type: "POST",
+                        data: JSON.stringify({ "files": files }),
+                        contentType: "application/json",
+                        beforeSend: () => {
+                            spaManager.setLoading(true)
+                        },
+                        success: (data) => {
+                            spaManager.goToPage("filemanager", { "path": (path ? path : "") })
+                        },
+                        complete: () => {
+                            spaManager.setLoading(false)
+                        },
+                        error: (err) => {
+                            alert("An error occurred while unzipping files: " + err.responseText);
+                        }
+                    });
                 })
 
                 spaManager.setLoading(false)

@@ -3,7 +3,6 @@ from starlette.responses import JSONResponse
 from extensions.apimodels import CreateSiteContent, EditSiteContent
 from extensions import NginxConfig
 from extensions.database import Data, Logs, get_db, Session
-import time
 from os import getenv
 
 nginxconfig = NginxConfig(
@@ -43,7 +42,6 @@ async def reload_nginx(db: Session = Depends(get_db)):
     if result == True:
         db.add(
             Logs(  # type: ignore
-                id=time.strftime("%Y-%m-%d %H:%M:%S"),
                 importance=2,
                 value="Nginx successfully reloaded",
             )
@@ -57,7 +55,6 @@ async def reload_nginx(db: Session = Depends(get_db)):
 
     db.add(
         Logs(  # type: ignore
-            id=time.strftime("%Y-%m-%d %H:%M:%S"),
             importance=3,
             value="Nginx failed to reload: " + str(result),
         )

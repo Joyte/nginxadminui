@@ -2,8 +2,9 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
 import socket
+import time
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
-from sqlalchemy import Integer, Date, Column, Boolean, Text, String, TIMESTAMP
+from sqlalchemy import Integer, Column, Boolean, Text, String
 
 DATABASE_URL = "mysql+pymysql://nginxadminui:cuzw2pKMsEjmeuLb@db/main_db"
 LOCAL_DATABASE_URL = "mysql+pymysql://nginxadminui:cuzw2pKMsEjmeuLb@localhost/main_db"
@@ -43,7 +44,12 @@ class Data(Base):
 class Logs(Base):
     __tablename__ = "logs"
 
-    id = Column(TIMESTAMP, primary_key=True, index=True)
+    id = Column(
+        String(20),
+        primary_key=True,
+        index=True,
+        default=lambda: int(time.time() * 1000),
+    )
     importance = Column(Integer, index=True)
     value = Column(Text)
 

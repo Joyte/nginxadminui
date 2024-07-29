@@ -40,10 +40,10 @@
 <script>
 
     function formatTime(timedate) {
-        // Take a date string like this: 2024-07-23T21:11:14
-        // And return a string like this: 23/07/2024 21:11:14
-        const date = new Date(timedate);
-        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+        // Take a date string like this: 1722243137281 (Which is a python time.time() * 1000 output)
+        // And return a string like this: 23/07/2024 21:11:14:580
+        let date = new Date(timedate);
+        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}`;
     }
 
     $(document).on("NAUIPageLoaded", () => {
@@ -57,7 +57,7 @@
             success: (data) => {
                 data.forEach((log) => {
                     let severityClass = "severity-" + log.importance;
-                    $("#log-holder").append(`<tr class="${severityClass}"><td>${formatTime(log.id)}</td><td>${log.value}</td></tr>`)
+                    $("#log-holder").append(`<tr class="${severityClass}"><td>${formatTime(Number(log.id))}</td><td>${log.value}</td></tr>`)
                 })
             },
             complete: () => {

@@ -23,5 +23,5 @@ class EditSiteContent(BaseModel):
     filename: Optional[str] | None = None
 
 
-class DeleteFiles(BaseModel):
+class FilesList(BaseModel):
     files: list[str]
