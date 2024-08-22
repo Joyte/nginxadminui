@@ -17,8 +17,8 @@ hosts = APIRouter(
 
 
 def set_nginx_reload(db: Session):
-    if not db.query(Data).filter(Data.id == "nginxreload").first():  # type: ignore
-        db.add(Data(id="nginxreload", is_active=True))  # type: ignore
+    if not db.query(Data).filter(Data.id == "nginxreload").first():
+        db.add(Data(id="nginxreload", is_active=True))
         db.commit()
 
 
@@ -27,7 +27,7 @@ async def check_reload(db: Session = Depends(get_db)):
     """
     Check if nginx needs to be reloaded.
     """
-    if db.query(Data).filter(Data.id == "nginxreload").first():  # type: ignore
+    if db.query(Data).filter(Data.id == "nginxreload").first():
         return {"reload": True}
 
     return {"reload": False}
@@ -41,20 +41,20 @@ async def reload_nginx(db: Session = Depends(get_db)):
     result = nginxconfig.reload_nginx()
     if result == True:
         db.add(
-            Logs(  # type: ignore
+            Logs(
                 importance=2,
                 value="Nginx successfully reloaded",
             )
         )
         # Check if data has nginxreload
-        data = db.query(Data).filter(Data.id == "nginxreload").first()  # type: ignore
+        data = db.query(Data).filter(Data.id == "nginxreload").first()
         if data:
             db.delete(data)
             db.commit()
         return {"message": "Nginx reloaded successfully"}
 
     db.add(
-        Logs(  # type: ignore
+        Logs(
             importance=3,
             value="Nginx failed to reload: " + str(result),
         )

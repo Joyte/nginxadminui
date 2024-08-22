@@ -14,4 +14,4 @@ async def get_logs(limit: int = 100, offset: int = 0, db: Session = Depends(get_
     Get all logs, limited to defined amount (default 100), offset by defined amount (default 0).
     Ordered chronologically.
     """
-    return db.query(Logs).order_by(Logs.id.desc()).limit(limit).offset(offset).all()  # type: ignore
+    return db.query(Logs).order_by(Logs.id.desc()).limit(limit).offset(offset).all()

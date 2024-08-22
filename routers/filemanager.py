@@ -30,7 +30,7 @@ async def unzip_file(path: str, files: FilesList, db: Session = Depends(get_db))
 
         if response is not None:
             db.add(
-                Logs(  # type: ignore
+                Logs(
                     importance=3,
                     value=f"Failed to unzip a file named `{name}` at `{path}`",
                 )
@@ -42,7 +42,7 @@ async def unzip_file(path: str, files: FilesList, db: Session = Depends(get_db))
             )
 
     db.add(
-        Logs(  # type: ignore
+        Logs(
             importance=1,
             value=f"Unzipped files named `{files.files}` at `{path}`",
         )
@@ -70,7 +70,7 @@ async def delete_folder(path: str, db: Session = Depends(get_db)):
     filemanager.delete_folder(path)
 
     db.add(
-        Logs(  # type: ignore
+        Logs(
             importance=1,
             value=f"Deleted a folder named `{path}`",
         )
@@ -88,7 +88,7 @@ async def delete_files(path: str, data: FilesList, db: Session = Depends(get_db)
         filemanager.delete_file(path, file)
 
     db.add(
-        Logs(  # type: ignore
+        Logs(
             importance=1,
             value=f"Deleted files named `{data.files}` at `{path}`",
         )
@@ -108,7 +108,7 @@ async def create_file(
         filemanager.create_file(path, file)
 
     db.add(
-        Logs(  # type: ignore
+        Logs(
             importance=1,
             value=f"Created files named `{[file.filename for file in files]}` at `{path}`",
         )
@@ -124,7 +124,7 @@ async def create_file(
 async def create_folder(path: str, db: Session = Depends(get_db)):
     filemanager.create_folder(path)
     db.add(
-        Logs(  # type: ignore
+        Logs(
             importance=1,
             value=f"Created a folder named `{path}`",
         )
