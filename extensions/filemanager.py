@@ -47,9 +47,17 @@ class Filemanager:
 
     def delete_folder(self, path: str):
         """
-        Deletes a folder in the www_root, centered around the provided path.
+        Deletes a folder in the www_root, centered around the provided path, even if it has files.
         """
-        os.rmdir(f"{self.www_root}/{path}")
+        folder_path = os.path.join(self.www_root, path)
+        for root, dirs, files in os.walk(folder_path, topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+            for name in dirs:
+                self.delete_folder(
+                    os.path.relpath(os.path.join(root, name), self.www_root)
+                )
+        os.rmdir(folder_path)
 
     def create_file(self, path: str, content: UploadFile):
         """

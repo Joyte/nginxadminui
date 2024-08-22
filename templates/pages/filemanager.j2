@@ -168,6 +168,11 @@
 
     function deleteFolder() {
         path = new URLSearchParams(window.location.search).get('path');
+        if ($("article.file, article.directory").length > 0) {
+            if (!confirm("Are you sure you want to delete this folder?")) {
+                return;
+            }
+        }
 
         $.ajax({
             url: "/api/filemanager/" + path + "/",
@@ -223,15 +228,13 @@
 
                 $("#article-container").append(`<article data-action="upload"><h1>Upload</h1><hr><div><i class="fa-solid fa-plus"></i></div></article>`)
                 $("#article-container").append(`<article data-action="createfolder"><h1>Create Folder</h1><hr><div><i class="fa-solid fa-folder-plus"></i></div></article>`)
-                $("#article-container").append(`<article id="delete" data-action="delete"><h1>Delete</h1><hr><div><i class="fa-solid fa-trash"></i></div></article>`)
+                $("#article-container").append(`<article id="delete" data-action="delete"><h1>Delete Folder</h1><hr><div><i class="fa-solid fa-trash"></i></div></article>`)
                 $("#article-container").append(`<article id="unzip" data-action="unzip"><h1>Unzip Files</h1><hr><div><i class="fa-solid fa-archive"></i></div></article>`)
             },
             complete: () => {
                 $("#unzip").hide()
-                // If article container has no articles with data-name
-                if ($("#article-container > article[data-name]").length === 0 && $("#article-container > article.directory").length === 0 && path) {
-                    $("#delete").show()
-                } else {
+
+                if (path === null) {
                     $("#delete").hide()
                 }
 
@@ -246,9 +249,17 @@
                     }
 
                     if ($("article.file.selected").length > 0) {
-                        $("#delete").show()
+                        if (path === null) {
+                            $("#delete").show()
+                        }
+                        $("#delete").children("h1").text("Delete Files")
                     } else {
-                        $("#delete").hide()
+                        if (path === null) {
+                            $("#delete").hide()
+                        } else {
+                            $("#delete").show()
+                        }
+                        $("#delete").children("h1").text("Delete Folder")
                     }
                 })
 
