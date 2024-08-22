@@ -75,7 +75,9 @@ class Filemanager:
                 [
                     "7z",
                     "x",
+                    "-y",
                     f"{self.www_root}/{path}/{name}",
+                    f"-o{self.www_root}/{path}",
                 ],
                 check=True,
                 stdout=subprocess.PIPE,
