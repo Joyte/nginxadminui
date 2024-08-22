@@ -1,7 +1,10 @@
 FROM ubuntu:24.10
 
 # Container essentials
-RUN apt update -y && apt install -y python3 python3-venv nginx
+RUN apt update -y && apt install -y python3 python3-venv nginx 7zip
+
+# Install PHP composer
+COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 
 WORKDIR /app
 

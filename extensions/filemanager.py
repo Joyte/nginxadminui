@@ -73,10 +73,9 @@ class Filemanager:
         try:
             subprocess.run(
                 [
-                    "unzip",
+                    "7z",
+                    "x",
                     f"{self.www_root}/{path}/{name}",
-                    "-d",
-                    f"{self.www_root}/{path}",
                 ],
                 check=True,
                 stdout=subprocess.PIPE,
