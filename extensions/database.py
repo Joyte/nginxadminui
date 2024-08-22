@@ -54,4 +54,4 @@ class Logs(Base):
     value = Column(Text)
 
 
-Base.metadata.create_all(engine)  # type: ignore
+Base.metadata.create_all(engine)
