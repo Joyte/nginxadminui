@@ -8,7 +8,7 @@ class pagecontent(str, Enum):
     hosts = "hosts"
     filemanager = "filemanager"
     accesslists = "accesslists"
-    sslcerts = "sslcerts"
+    sslcertificates = "sslcertificates"
     users = "users"
     logs = "logs"
     settings = "settings"
