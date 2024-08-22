@@ -1,18 +1,15 @@
 import os
-import mimetypes
-import urllib
 from fastapi import UploadFile
 import subprocess
 
 
 class Filemanager:
     """
-    A helper class to interact with the files in the provided www_root
+    A helper class to interact with the files in the www_root.
     """
 
-    def __init__(self, www_root: str):
-        self.www_root = www_root
-        self.mime = mimetypes.MimeTypes()
+    def __init__(self):
+        self.www_root = os.getenv("WWW_ROOT", "/var/www/html")
 
     def list_files(self, path: str = ""):
         """

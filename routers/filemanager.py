@@ -3,14 +3,13 @@ from starlette.responses import JSONResponse
 from extensions.filemanager import Filemanager
 from extensions.database import get_db, Session, Logs
 from extensions.apimodels import FilesList
-from os import getenv
 
 filemanagerapi = APIRouter(
     prefix="/api/filemanager",
     tags=["File Manager API"],
 )
 
-filemanager = Filemanager(www_root=getenv("WWW_ROOT", "/var/www/html"))
+filemanager = Filemanager()
 
 
 @filemanagerapi.get("")

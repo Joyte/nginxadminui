@@ -25,3 +25,8 @@ class EditSiteContent(BaseModel):
 
 class FilesList(BaseModel):
     files: list[str]
+
+
+class Certificate(BaseModel):
+    fullchain: str
+    privkey: str

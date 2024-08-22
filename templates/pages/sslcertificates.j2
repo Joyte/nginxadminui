@@ -1,1 +1,163 @@
-<h1>SSL Certificates</h1>
+<style>
+    #create-new {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+
+        background-color: var(--secondary-background-color);
+        color: var(--primary-color);
+        border: 3px solid var(--tertiary-background-color);
+        padding: 1rem;
+        border-radius: 25%;
+        font-size: 2rem;
+        cursor: pointer;
+    }
+
+    #create-new:hover {
+        background-color: var(--tertiary-background-color);
+        color: var(--secondary-background-color);
+    }
+
+    main table {
+        border-collapse: collapse;
+        width: calc(100% - 2rem);
+        margin: 1rem;
+    }
+
+    main th,
+    main td {
+        border: 1px solid var(--tertiary-background-color);
+        padding: 8px;
+        text-align: left;
+    }
+
+    main i {
+        cursor: pointer;
+        padding: 10px;
+    }
+
+    main i.fa-trash {
+        color: tomato;
+    }
+
+    main i.fa-eye {
+        color: dodgerblue;
+    }
+
+    main i.fa-copy {
+        color: darkorange;
+    }
+</style>
+
+<script>
+
+    function formatDate(date) {
+        // Take date formatted as 20240628100309Z and return 2024-06-28 10:03:09
+        return date.slice(0, 4) + "-" + date.slice(4, 6) + "-" + date.slice(6, 8) + " " + date.slice(8, 10) + ":" + date.slice(10, 12) + ":" + date.slice(12, 14);
+    }
+
+    function calculateDaysUntil(date) {
+        // Take date formatted as 20240628100309Z and return days until that date
+        const now = new Date();
+        const then = new Date(date.slice(0, 4), date.slice(4, 6) - 1, date.slice(6, 8), date.slice(8, 10), date.slice(10, 12), date.slice(12, 14));
+        const diff = then - now;
+        return Math.floor(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function processAction(action, site) {
+        if (action === "delete") {
+            if (confirm("Are you sure you want to delete this certificate?")) {
+                $.ajax({
+                    url: "/api/sslcertificates/" + site,
+                    type: "DELETE",
+                    success: () => {
+                        $(document).trigger("NAUIPageLoaded");
+                    }
+                });
+            }
+        } else if (action === "view") {
+            window.open("/api/sslcertificates/" + site, "_blank");
+        } else if (action === "copy") {
+            navigator.clipboard.writeText(`ssl_certificate /var/www/certificates/${site}/fullchain.pem;\nssl_certificate_key /var/www/certificates/${site}/privkey.pem;`);
+        }
+    }
+
+    $(document).on("NAUIPageLoaded", () => {
+        $.ajax({
+            url: "/api/sslcertificates",
+            type: "GET",
+            beforeSend: () => {
+                spaManager.setLoading(true)
+            },
+            success: (data) => {
+                console.log(data)
+                $("table tbody").empty();
+                data.forEach((cert) => {
+                    $("table tbody").append(`
+                        <tr>
+                            <td>${cert.valid_sites}</td>
+                            <td>${cert.issuer}</td>
+                            <td>${formatDate(cert.not_before)}</td>
+                            <td>${formatDate(cert.not_after)} (${calculateDaysUntil(cert.not_after)} Days)</td>
+
+                            <td>
+                                <i data-action="delete" data-id="${cert.site}" class="fa-solid fa-trash"></i>
+                                <i data-action="copy" data-id="${cert.site}" class="fa-solid fa-copy"></i>
+                            </td>
+                        </tr>
+                    `);
+                });
+            },
+            complete: () => {
+                $("main td i").on("click", function () {
+                    processAction($(this).data("action"), $(this).data("id"));
+                });
+
+                $("#asdfasdfafsdcreate-new").on("click", function () {
+                    // This doesn't work, cert needs newlines. Make custom modal
+                    sitename = prompt("Enter the site name");
+                    fullchain = prompt("Enter the fullchain.pem contents");
+                    privkey = prompt("Enter the privkey.pem contents");
+                    if (fullchain && privkey) {
+                        $.ajax({
+                            url: "/api/sslcertificates/" + sitename,
+                            contentType: "application/json; charset=utf-8",
+                            type: "POST",
+                            dataType: "json",
+                            data: JSON.stringify({
+                                fullchain: fullchain,
+                                privkey: privkey
+                            }),
+                            success: () => {
+                                $("table tbody").empty();
+                                $(document).trigger("NAUIPageLoaded");
+                            }
+                        });
+                    }
+                });
+
+                spaManager.setLoading(false)
+            }
+
+        });
+    });
+</script>
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Valid Domains</th>
+            <th>Issuer</th>
+            <th>Valid From</th>
+            <th>Valid To</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
+<div id="create-new">
+    <i class="fa-solid fa-plus"></i>
+</div>
