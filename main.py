@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, staticfiles, APIRouter
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -80,4 +81,5 @@ app.include_router(logs)
 app.include_router(hosts)
 app.include_router(filemanagerapi)
 app.include_router(sslcertificatesapi)
+app.add_middleware(HTTPSRedirectMiddleware)
 app.mount("/", staticfiles.StaticFiles(directory="public"), name="public")
