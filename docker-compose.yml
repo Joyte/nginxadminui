@@ -7,6 +7,7 @@ services:
       volumes:
          - "./sites_available:/etc/nginx/sites-available"
          - "./html:/var/www/html"
+         - "./certificates:/var/www/certificates"
       restart: always
       ports:
          - "80:80"

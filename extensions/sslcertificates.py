@@ -34,11 +34,17 @@ class SSLCertificates:
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, fullchain)
             except crypto.Error:
                 return None
+
+            cn = ""
+            for i in range(cert.get_extension_count()):
+                if cert.get_extension(i).get_short_name() == b"subjectAltName":
+                    cn = cert.get_extension(i).__str__()
+                    break
+            if not cn:
+                cn = cert.get_subject().CN
             return {
                 "site": site,
-                "valid_sites": [
-                    cert[4:] for cert in cert.get_extension(6).__str__().split(", ")
-                ],
+                "valid_sites": cn,
                 "issuer": cert.get_issuer().O,
                 "not_before": cert.get_notBefore(),
                 "not_after": cert.get_notAfter(),
