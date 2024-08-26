@@ -101,7 +101,7 @@
                             <td>${formatDate(cert.not_after)} (${calculateDaysUntil(cert.not_after)} Days)</td>
 
                             <td>
-                                <i data-action="delete" data-id="${cert.site}" class="fa-solid fa-trash"></i>
+                                <i style="display: none;" data-action="delete" data-id="${cert.site}" class="fa-solid fa-trash"></i>
                                 <i data-action="copy" data-id="${cert.site}" class="fa-solid fa-copy"></i>
                             </td>
                         </tr>
@@ -158,6 +158,6 @@
 
     </tbody>
 </table>
-<div id="create-new">
+<div id="create-new" style="display: none">
     <i class="fa-solid fa-plus"></i>
 </div>
