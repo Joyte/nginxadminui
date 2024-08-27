@@ -1,193 +1,315 @@
-class MonacoModalManager {
+class MonacoEditorManager {
     constructor() {
-        this._spawnModalCSS();
+        this.editor = null; // Store the Monaco editor instance
+        this.container = null; // Store the container for the editor
+        this.filename = null; // Current filename
+        this.content = null; // Current content of the editor
+        this.options = {};
+
+        this.injectMonacoEditorStyles(); // Inject styles when initializing
     }
 
-    _spawnModalCSS() {
-        if (document.getElementById("monacoModalCSS")) {
+    injectMonacoEditorStyles() {
+        if (document.querySelector(".monacoModalCSS")) {
             return;
         }
 
         let css = document.createElement("style");
-        css.id = "monacoModalCSS";
+        css.className = "monacoModalCSS";
         css.innerHTML = /*css*/ `
-            #monacoModal {
-                display: none;
+            .monaco-editor-container {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                background-color: var(--background-color);
+            }
+
+            .monaco-modal {
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
                 background-color: rgba(0, 0, 0, 0.5);
-                z-index: 100;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
             }
 
-            #monacoModal .modal-content {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background-color: white;
-                padding: 20px;
-                border-radius: 5px;
+            .monaco-modal-content {
+                background-color: var(--background-color);
                 width: 80%;
-                height: 80vh;
-                overflow-y: auto;
-                background-color: var(--background-color)
+                height: 80%;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                position: relative;
+                display: flex;
+                flex-direction: column;
             }
-
-            #monacoModal .modal-content .monaco_titlebar {
+    
+            .monaco-titlebar {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                padding: 0.5rem;
+                height: 40px;
             }
 
-            #monacoModal .modal-content .monaco_titlebar i {
+            .monaco-titlebar .monaco_filename {
+                font-size: 1.5rem;
+                margin: 0;
+                margin-left: 0.5rem;
+                padding: 0;
+            }
+    
+            .monaco-titlebar i {
                 font-size: 2.5rem;
                 margin-right: 1rem;
             }
-
-            #monacoModal .modal-content .monaco_titlebar #monaco_exit:hover {
+    
+            .monaco-titlebar .monaco_exit:hover {
                 color: var(--tertiary-background-color);
                 cursor: pointer;
             }
-
-            #monacoModal .modal-content .monaco_titlebar #monaco_save.saved {
+    
+            .monaco-titlebar .monaco_save.saved {
                 color: var(--success-color);
             }
-
-            #monacoModal .modal-content .monaco_titlebar #monaco_save.saved:hover {
+    
+            .monaco-titlebar .monaco_save.saved:hover {
                 color: var(--success-color-hover);
                 cursor: not-allowed;
             }
-
-            #monacoModal .modal-content .monaco_titlebar #monaco_save:not(.saved) {
+    
+            .monaco-titlebar .monaco_save:not(.saved) {
                 color: var(--error-color);
             }
-
-            #monacoModal .modal-content .monaco_titlebar #monaco_save:not(.saved):hover {
+    
+            .monaco-titlebar .monaco_save:not(.saved):hover {
                 color: var(--error-color-hover);
                 cursor: pointer;
-            }
-
-            #monaco_titlebar {
-                height: 10%;
-            }
-
-            #monaco_filename {
-                margin-bottom: 10px;
-                font-size: 3rem;
-            }
-
-            #monaco-container {
-                height: 90%;
-                border: 1px solid #000;
             }
         `;
         document.head.appendChild(css);
     }
 
-    _spawnModal() {
-        let modal = document.createElement("div");
-        modal.id = "monacoModal";
-        modal.innerHTML = /*html*/ `
-            <div class="modal-content">
-                <div class="monaco_titlebar">
-                    <h3 id="monaco_filename" contenteditable>unknown_file_name.conf</h3>
-                    <div>
-                        <i id="monaco_save" class="fa-solid fa-floppy-disk"></i>
-                        <i id="monaco_exit" class="fa-solid fa-xmark"></i>
-                    </div>
-                </div>
-                <div id="monaco-container"></div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        document.getElementById("monaco_exit").addEventListener("click", () => {
-            this.dismissModal();
-        });
-    }
-
-    summonModal(filename, content, saveCallback, newfile = false) {
-        if (document.getElementById("monacoModal")) {
-            this.dismissModal();
-        } else {
-            this._spawnModal();
+    createEditor(container, options) {
+        if (this.editor) {
+            this.dismissEditor();
         }
 
-        $("#monaco_save").click(() => {
-            if ($("#monaco_save").hasClass("saved")) {
-                return;
+        const {
+            filename,
+            content,
+            saveCallback,
+            newfile = false,
+            enableTitlebar = true,
+            editableFilename = true,
+            enableSaveButton = true,
+            enableCloseButton = true,
+        } = options;
+
+        this.container = container;
+
+        let editorContainer = document.createElement("div");
+        editorContainer.className = "monaco-editor-container";
+
+        if (enableTitlebar) {
+            let titlebar = document.createElement("div");
+            titlebar.className = "monaco-titlebar";
+            titlebar.innerHTML = `
+                <h3 class="monaco_filename" ${
+                    editableFilename ? "contenteditable" : ""
+                }>${filename}</h3>
+                <div>
+                    ${
+                        enableSaveButton
+                            ? '<i class="monaco_save fa-solid fa-floppy-disk"></i>'
+                            : ""
+                    }
+                    ${
+                        enableCloseButton
+                            ? '<i class="monaco_exit fa-solid fa-xmark"></i>'
+                            : ""
+                    }
+                </div>
+            `;
+
+            editorContainer.appendChild(titlebar);
+        }
+
+        let monacoContainer = document.createElement("div");
+        monacoContainer.style.height = enableTitlebar
+            ? "calc(100% - 40px)"
+            : "100%";
+
+        editorContainer.appendChild(monacoContainer);
+        container.appendChild(editorContainer);
+
+        this.filename = filename;
+        this.content = content;
+
+        if (enableTitlebar) {
+            this.setupEventListeners(editorContainer, saveCallback);
+        }
+
+        this.setupEditor(
+            monacoContainer,
+            content,
+            filename,
+            saveCallback,
+            newfile,
+            enableTitlebar
+        );
+    }
+
+    createModalEditor(options) {
+        if (this.editor) {
+            this.dismissEditor();
+        }
+
+        // Create modal overlay
+        let modalOverlay = document.createElement("div");
+        modalOverlay.className = "monaco-modal";
+
+        // Create modal content container
+        let modalContent = document.createElement("div");
+        modalContent.className = "monaco-modal-content";
+
+        // Use the existing createEditor method to setup the editor inside the modal content
+        this.createEditor(modalContent, options);
+
+        modalOverlay.appendChild(modalContent);
+        document.body.appendChild(modalOverlay);
+
+        // Overwrite dismissEditor to also remove the modal overlay
+        this.dismissEditor = () => {
+            if (this.editor) {
+                this.editor.dispose();
             }
+            if (modalOverlay) {
+                modalOverlay.remove();
+            }
+        };
+    }
 
-            let filename = $("#monaco_filename").text();
-            let value = monaco.editor.getModels()[0].getValue();
-
-            saveCallback(value, filename);
-            window.monacoEditorContent = value;
-            window.monacoEditorFilename = filename;
-            this.checkSaveState();
-        });
-
-        document.getElementById("monaco_filename").innerText = filename;
-        document.getElementById("monacoModal").style.display = "block";
-
-        monacotheme =
+    setupEditor(
+        container,
+        content,
+        filename,
+        saveCallback,
+        newfile,
+        enableTitlebar
+    ) {
+        let theme =
             window.matchMedia &&
             window.matchMedia("(prefers-color-scheme: light)").matches
                 ? "nginx-theme"
                 : "nginx-theme-dark";
 
-        monaco.editor.create(document.getElementById("monaco-container"), {
+        this.editor = monaco.editor.create(container, {
             value: content,
             language: "nginx",
-            theme: monacotheme,
+            theme: theme,
             scrollBeyondLastLine: false,
-            cursorSmoothCaretAnimation: "off",
+            cursorSmoothCaretAnimation: "explicit",
+            cursorBlinking: "blink",
             fontSize: 16,
             automaticLayout: true,
         });
-        if (newfile) {
-            window.monacoEditorContent = null;
-            window.monacoEditorFilename = null;
-        } else {
-            window.monacoEditorContent = content;
-            window.monacoEditorFilename = filename;
-            document.getElementById("monaco_save").classList.add("saved");
+
+        $(".monaco-editor-container > div:not(.monaco-titlebar)").css(
+            "height",
+            "calc(100% - 60px)"
+        );
+
+        if (enableTitlebar) {
+            if (newfile) {
+                this.content = null;
+                this.filename = null;
+            } else {
+                this.content = content;
+                this.filename = filename;
+                container
+                    .closest(".monaco-editor-container")
+                    .querySelector(".monaco_save")
+                    .classList.add("saved");
+            }
+
+            this.editor.onKeyUp(() => {
+                this.checkSaveState();
+            });
+
+            container
+                .closest(".monaco-editor-container")
+                .querySelector(".monaco_filename")
+                .addEventListener("input", () => {
+                    this.checkSaveState();
+                });
+
+            this.editor.addCommand(
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+                () => {
+                    container
+                        .closest(".monaco-editor-container")
+                        .querySelector(".monaco_save")
+                        .click();
+                }
+            );
+        }
+    }
+
+    setupEventListeners(editorContainer, saveCallback) {
+        let exitButton = editorContainer.querySelector(".monaco_exit");
+        let saveButton = editorContainer.querySelector(".monaco_save");
+
+        if (exitButton) {
+            exitButton.addEventListener("click", () => {
+                this.dismissEditor();
+            });
         }
 
-        window.monacoKeyUpEvent = monaco.editor.getEditors()[0].onKeyUp(() => {
-            this.checkSaveState();
-        });
+        if (saveButton) {
+            saveButton.addEventListener("click", () => {
+                if (saveButton.classList.contains("saved")) {
+                    return;
+                }
 
-        $("#monaco_filename").on("input", () => {
-            this.checkSaveState();
-        });
+                let filename =
+                    editorContainer.querySelector(".monaco_filename").innerText;
+                let value = this.editor.getModel().getValue();
 
-        monaco.editor
-            .getEditors()[0]
-            .addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-                $("#monaco_save").click();
+                saveCallback(value, filename);
+                this.content = value;
+                this.filename = filename;
+                this.checkSaveState();
             });
+        }
     }
 
     checkSaveState() {
+        let currentContent = this.editor.getModel().getValue();
+        let currentFilename =
+            this.container.querySelector(".monaco_filename").innerText;
+
         if (
-            window.monacoEditorContent !==
-                monaco.editor.getModels()[0].getValue() ||
-            window.monacoEditorFilename !== $("#monaco_filename").text()
+            this.content !== currentContent ||
+            this.filename !== currentFilename
         ) {
-            document.getElementById("monaco_save").classList.remove("saved");
+            this.container
+                .querySelector(".monaco_save")
+                .classList.remove("saved");
         } else {
-            document.getElementById("monaco_save").classList.add("saved");
+            this.container.querySelector(".monaco_save").classList.add("saved");
         }
     }
 
-    dismissModal() {
-        window.monacoKeyUpEvent.dispose();
-        document.getElementById("monacoModal").remove();
-        monaco.editor.getEditors()[0].dispose();
+    dismissEditor() {
+        if (this.editor) {
+            this.editor.dispose();
+        }
+        if (this.container) {
+            this.container.remove();
+        }
     }
 }

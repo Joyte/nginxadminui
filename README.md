@@ -13,7 +13,10 @@ Do not expose port 81 to the internet, as the admin UI will be accessible to any
 ## Installation
 * Copy `docker-compose.yml` to a dedicated folder in your server
 * Run `docker compose up -d`
-* Done! Navigate to `http://localhost:81` to access the web UI
+* Done! Navigate to `https://localhost:81` to access the web UI
+
+Note: It is ***HTTPS***, not http! If you connect over http, you will get an error akin to "The connection was reset" on firefox and "This page isn’t working" on chrome-based browsers.
+
 
 ## Documentation
 

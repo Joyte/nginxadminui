@@ -158,28 +158,33 @@
                         spaManager.setLoading(true)
                     },
                     success: (data) => {
-                        monacoModal.summonModal(filename, data["content"], (newcontent, newfilename) => {
-                            $.ajax({
-                                url: '/api/hosts/' + filename,
-                                method: 'PUT',
-                                contentType: "application/json; charset=utf-8",
-                                dataType: "json",
-                                data: JSON.stringify({
-                                    content: newcontent,
-                                    filename: newfilename
-                                }),
-                                beforeSend: () => {
-                                    spaManager.setLoading(true)
-                                },
-                                success: (data) => {
-                                    updateHosts();
-                                    needToReload();
-                                },
-                                complete: () => {
-                                    spaManager.setLoading(false)
-                                },
-                            });
-
+                        modal.createModalEditor({
+                            filename: filename,
+                            content: data["content"],
+                            newfile: false,
+                            enableTitlebar: true,
+                            saveCallback: (newcontent, newfilename) => {
+                                $.ajax({
+                                    url: '/api/hosts/' + filename,
+                                    method: 'PUT',
+                                    contentType: "application/json; charset=utf-8",
+                                    dataType: "json",
+                                    data: JSON.stringify({
+                                        content: newcontent,
+                                        filename: newfilename
+                                    }),
+                                    beforeSend: () => {
+                                        spaManager.setLoading(true)
+                                    },
+                                    success: (data) => {
+                                        updateHosts();
+                                        needToReload();
+                                    },
+                                    complete: () => {
+                                        spaManager.setLoading(false)
+                                    },
+                                });
+                            }
                         });
                     },
                     complete: () => {
@@ -277,30 +282,36 @@
     }
 
     $(document).on("NAUIPageLoaded", () => {
-        window.monacoModal = new MonacoModalManager();
+        window.modal = new MonacoEditorManager();
         updateHosts();
 
         $('#create-new').on('click', () => {
-            monacoModal.summonModal("mysite.conf", "# Your nginx code here.....\n", (newcontent, filename) => {
-                $.ajax({
-                    url: `/api/hosts/${filename}`,
-                    method: 'POST',
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    data: JSON.stringify({
-                        content: newcontent
-                    }),
-                    beforeSend: () => {
-                        spaManager.setLoading(true)
-                    },
-                    success: (data) => {
-                        updateHosts();
-                        needToReload();
-                    },
-                    complete: () => {
-                        spaManager.setLoading(false)
-                    },
-                });
+            modal.createModalEditor({
+                filename: "mysite.conf",
+                content: "# Your nginx code here.....\n",
+                newfile: true,
+                enableFilenameAndSave: true,
+                saveCallback: (newcontent, filename) => {
+                    $.ajax({
+                        url: `/api/hosts/${filename}`,
+                        method: 'POST',
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        data: JSON.stringify({
+                            content: newcontent
+                        }),
+                        beforeSend: () => {
+                            spaManager.setLoading(true)
+                        },
+                        success: (data) => {
+                            updateHosts();
+                            needToReload();
+                        },
+                        complete: () => {
+                            spaManager.setLoading(false)
+                        },
+                    });
+                }
             }, true);
         });
 
