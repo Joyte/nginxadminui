@@ -4,8 +4,6 @@ class MonacoEditorManager {
         this.container = null; // Store the container for the editor
         this.filename = null; // Current filename
         this.content = null; // Current content of the editor
-        this.filename_bkp = null; // Backup filename (if save failed)
-        this.content_bkp = null; // Backup content of the editor (if save failed)
         this.managertwo = null; // Store the Monaco editor instance for the second editor
         this.options = {};
 
@@ -387,6 +385,8 @@ class MonacoEditorManager {
                 this.checkSaveState();
             });
 
+            this.checkSaveState();
+
             container
                 .closest(".monaco-editor-container")
                 .querySelector(".monaco_filename")
@@ -430,6 +430,7 @@ class MonacoEditorManager {
                     content: value,
                     filename: filename,
                 });
+
                 if (!succeded) {
                     return;
                 }

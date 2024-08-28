@@ -176,8 +176,9 @@
                             newfile: false,
                             enableTitlebar: true,
                             saveCallback: (file) => {
-                                $.ajax({
+                                return $.ajax({
                                     url: '/api/hosts/' + filename,
+                                    async: false,
                                     method: 'PUT',
                                     contentType: "application/json; charset=utf-8",
                                     dataType: "json",
@@ -195,7 +196,7 @@
                                     complete: () => {
                                         spaManager.setLoading(false)
                                     },
-                                });
+                                }).status === 200;
                             }
                         });
                     },
@@ -304,8 +305,9 @@
                 newfile: true,
                 enableFilenameAndSave: true,
                 saveCallback: (file) => {
-                    $.ajax({
+                    return $.ajax({
                         url: `/api/hosts/${file.filename}`,
+                        async: false,
                         method: 'POST',
                         contentType: "application/json; charset=utf-8",
                         dataType: "json",
@@ -322,7 +324,7 @@
                         complete: () => {
                             spaManager.setLoading(false)
                         },
-                    });
+                    }).status === 200;
                 }
             }, true);
         });

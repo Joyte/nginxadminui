@@ -162,6 +162,7 @@
                             saveCallback: (fullchain, privkey) => {
                                 return $.ajax({
                                     url: "/api/sslcertificates",
+                                    async: false,
                                     contentType: "application/json; charset=utf-8",
                                     type: "POST",
                                     dataType: "json",
