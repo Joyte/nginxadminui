@@ -4,6 +4,9 @@ class MonacoEditorManager {
         this.container = null; // Store the container for the editor
         this.filename = null; // Current filename
         this.content = null; // Current content of the editor
+        this.filename_bkp = null; // Backup filename (if save failed)
+        this.content_bkp = null; // Backup content of the editor (if save failed)
+        this.managertwo = null; // Store the Monaco editor instance for the second editor
         this.options = {};
 
         this.injectMonacoEditorStyles(); // Inject styles when initializing
@@ -24,7 +27,7 @@ class MonacoEditorManager {
                 background-color: var(--background-color);
             }
 
-            .monaco-modal {
+            .monaco-modal, .monaco-double-modal {
                 position: fixed;
                 top: 0;
                 left: 0;
@@ -32,14 +35,31 @@ class MonacoEditorManager {
                 height: 100%;
                 background-color: rgba(0, 0, 0, 0.5);
                 display: flex;
-                justify-content: center;
                 align-items: center;
                 z-index: 1000;
             }
 
-            .monaco-modal-content {
+            .monaco-modal {
+                justify-content: center;
+            }
+
+            .monaco-double-modal {
+                justify-content: space-evenly;
+            }
+
+            .monaco-modal > .monaco-modal-content {
                 background-color: var(--background-color);
                 width: 80%;
+                height: 80%;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                position: relative;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .monaco-double-modal > .monaco-modal-content {
+                background-color: var(--background-color);
+                width: 40%;
                 height: 80%;
                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
                 position: relative;
@@ -101,12 +121,13 @@ class MonacoEditorManager {
         const {
             filename,
             content,
-            saveCallback,
+            saveCallback = () => {},
             newfile = false,
             enableTitlebar = true,
             editableFilename = true,
             enableSaveButton = true,
             enableCloseButton = true,
+            language = "nginx",
         } = options;
 
         this.container = container;
@@ -159,8 +180,129 @@ class MonacoEditorManager {
             filename,
             saveCallback,
             newfile,
-            enableTitlebar
+            enableTitlebar,
+            language
         );
+    }
+
+    createDoubleModalEditor(optionsA, optionsB) {
+        if (this.editor) {
+            this.dismissEditor();
+        }
+
+        this.managertwo = new MonacoEditorManager();
+
+        // Create modal overlay
+        let modalOverlay = document.createElement("div");
+        modalOverlay.className = "monaco-double-modal";
+
+        // Create modal content container
+        let modalContent = document.createElement("div");
+        modalContent.className = "monaco-modal-content";
+
+        // Use the existing createEditor method to setup the editor inside the modal content
+        this.createEditor(modalContent, optionsA);
+
+        // Create modal content container
+        let modalContentTwo = document.createElement("div");
+        modalContentTwo.className = "monaco-modal-content";
+
+        // Use the existing createEditor method to setup the editor inside the modal content
+        this.managertwo.createEditor(modalContentTwo, optionsB);
+
+        modalOverlay.appendChild(modalContent);
+        modalOverlay.appendChild(modalContentTwo);
+        document.body.appendChild(modalOverlay);
+
+        // Overwrite dismissEditor to also remove the modal overlay
+        this.dismissEditor = () => {
+            if (this.editor) {
+                this.editor.dispose();
+            }
+            if (this.managertwo.editor) {
+                this.managertwo.editor.dispose();
+            }
+            if (modalOverlay) {
+                modalOverlay.remove();
+            }
+        };
+
+        this.managertwo.dismissEditor = () => {
+            if (this.editor) {
+                this.editor.dispose();
+            }
+            if (this.managertwo.editor) {
+                this.managertwo.editor.dispose();
+            }
+            if (modalOverlay) {
+                modalOverlay.remove();
+            }
+        };
+
+        // Replace the keyUp events for both editors to update the save state of both editors
+        let saveFunc = () => {
+            let saved;
+            saved = this.checkSaveState() && this.managertwo.checkSaveState();
+
+            if (saved) {
+                this.managertwo.container
+                    .querySelector(".monaco_save")
+                    .classList.add("saved");
+            } else {
+                this.managertwo.container
+                    .querySelector(".monaco_save")
+                    .classList.remove("saved");
+            }
+        };
+
+        this.editor.onKeyUp(saveFunc);
+        this.managertwo.editor.onKeyUp(saveFunc);
+
+        saveFunc();
+
+        // Replace the save button click event for the managertwo editor to also save the first editor
+        let saveButton =
+            this.managertwo.container.querySelector(".monaco_save");
+        $(saveButton).off("click");
+        $(saveButton).on("click", () => {
+            if (saveButton.classList.contains("saved")) {
+                return;
+            }
+
+            let filenameA =
+                this.container.querySelector(".monaco_filename").innerText;
+            let valueA = this.editor.getModel().getValue();
+
+            let filenameB =
+                this.managertwo.container.querySelector(
+                    ".monaco_filename"
+                ).innerText;
+
+            let valueB = this.managertwo.editor.getModel().getValue();
+
+            let succeded = optionsB.saveCallback(
+                {
+                    content: valueA,
+                    filename: filenameA,
+                },
+                {
+                    content: valueB,
+                    filename: filenameB,
+                }
+            );
+
+            if (!succeded) {
+                return;
+            }
+
+            this.content = valueA;
+            this.filename = filenameA;
+            this.managertwo.content = valueB;
+            this.managertwo.filename = filenameB;
+
+            saveFunc();
+            this.checkSaveState();
+        });
     }
 
     createModalEditor(options) {
@@ -199,7 +341,10 @@ class MonacoEditorManager {
         filename,
         saveCallback,
         newfile,
-        enableTitlebar
+        enableTitlebar,
+        language,
+        enableSaveButton,
+        enableCloseButton
     ) {
         let theme =
             window.matchMedia &&
@@ -209,7 +354,7 @@ class MonacoEditorManager {
 
         this.editor = monaco.editor.create(container, {
             value: content,
-            language: "nginx",
+            language: language,
             theme: theme,
             scrollBeyondLastLine: false,
             cursorSmoothCaretAnimation: "explicit",
@@ -230,10 +375,12 @@ class MonacoEditorManager {
             } else {
                 this.content = content;
                 this.filename = filename;
-                container
-                    .closest(".monaco-editor-container")
-                    .querySelector(".monaco_save")
-                    .classList.add("saved");
+                if (enableSaveButton) {
+                    container
+                        .closest(".monaco-editor-container")
+                        .querySelector(".monaco_save")
+                        .classList.add("saved");
+                }
             }
 
             this.editor.onKeyUp(() => {
@@ -264,13 +411,13 @@ class MonacoEditorManager {
         let saveButton = editorContainer.querySelector(".monaco_save");
 
         if (exitButton) {
-            exitButton.addEventListener("click", () => {
+            $(exitButton).on("click", () => {
                 this.dismissEditor();
             });
         }
 
         if (saveButton) {
-            saveButton.addEventListener("click", () => {
+            $(saveButton).on("click", () => {
                 if (saveButton.classList.contains("saved")) {
                     return;
                 }
@@ -279,7 +426,14 @@ class MonacoEditorManager {
                     editorContainer.querySelector(".monaco_filename").innerText;
                 let value = this.editor.getModel().getValue();
 
-                saveCallback(value, filename);
+                let succeded = saveCallback({
+                    content: value,
+                    filename: filename,
+                });
+                if (!succeded) {
+                    return;
+                }
+
                 this.content = value;
                 this.filename = filename;
                 this.checkSaveState();
@@ -292,16 +446,26 @@ class MonacoEditorManager {
         let currentFilename =
             this.container.querySelector(".monaco_filename").innerText;
 
+        let saved = false;
         if (
             this.content !== currentContent ||
             this.filename !== currentFilename
         ) {
             this.container
                 .querySelector(".monaco_save")
-                .classList.remove("saved");
+                ?.classList.remove("saved");
         } else {
-            this.container.querySelector(".monaco_save").classList.add("saved");
+            this.container
+                .querySelector(".monaco_save")
+                ?.classList.add("saved");
+            saved = true;
         }
+
+        return saved;
+    }
+
+    saveFailed() {
+        this.container.querySelector(".monaco_save").classList.remove("saved");
     }
 
     dismissEditor() {

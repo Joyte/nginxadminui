@@ -30,3 +30,7 @@ class FilesList(BaseModel):
 class Certificate(BaseModel):
     fullchain: str
     privkey: str
+
+
+class Domain(BaseModel):
+    domain: str
