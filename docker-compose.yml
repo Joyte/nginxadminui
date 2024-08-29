@@ -5,7 +5,7 @@ services:
       container_name: nginxadminui
       image: joyte/nginxadminui:latest
       volumes:
-         - "./dataa/sites_available:/etc/nginx/sites-available"
+         - "./data/sites_available:/etc/nginx/sites-available"
          - "./data/html:/var/www/html"
          - "./data/certificates:/etc/nginxadminui/certificates"
          - "./data/logs:/etc/nginxadminui/logs"
