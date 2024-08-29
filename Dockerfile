@@ -22,6 +22,9 @@ RUN .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r requirements
 # Clear sites-available and sites-enabled
 RUN rm /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
+# Create storage for logs, certificates, etc
+RUN mkdir -p /etc/nginxadminui/logs /etc/nginxadminui/certificates
+
 # Expose the ports that the application listens on.
 EXPOSE 81
 EXPOSE 80

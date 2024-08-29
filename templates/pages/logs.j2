@@ -2,22 +2,30 @@
     table {
         width: 100%;
         border-collapse: collapse;
-
+        height: 100vh;
+        display: block;
+        overflow-y: scroll;
+        position: relative;
     }
 
     thead {
         font-size: 2em;
+        position: sticky;
+        top: 0;
+        background-color: var(--background-color);
+        outline: 1px solid black;
     }
 
     thead td {
-        border: 1px solid black;
         padding: 10px;
         font-weight: bold;
+        border: 2px solid black;
+        outline: 1px solid black;
     }
 
     tbody td {
         border: 1px solid black;
-        padding: 4px;
+        padding: 2px;
     }
 
     .severity-3 {
@@ -32,21 +40,278 @@
         background-color: var(--severity-one);
     }
 
-    #time-log-header {
-        width: 180px;
+    #container {
+        height: 100vh;
+        display: flex;
+        flex-direction: row;
+    }
+
+    #logselector {
+        display: flex;
+        flex-direction: column;
+        list-style-type: none;
+        padding: 0;
+        width: 200px;
+        border-left: 2px solid var(--tertiary-background-color);
+    }
+
+    #logselector>li {
+        background-color: var(--secondary-background-color);
+        padding: 10px;
+        user-select: none;
+    }
+
+    #logselector>li h4 {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    #logselector>li>div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .action-menu i {
+        cursor: pointer;
+    }
+
+    #logselector>li:not(.selected) {
+        cursor: pointer;
+    }
+
+    #logselector>li:hover {
+        background-color: var(--tertiary-background-color);
+    }
+
+    #logselector>li.selected {
+        background-color: var(--background-color);
+    }
+
+    #logselector>li[data-action="add"] {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    #logselector>li:not(.selected) ul,
+    #logselector>li:not(.selected) .action-menu,
+    #logselector>li[data-logname="server"] .action-menu {
+        display: none;
+    }
+
+    #logselector>li.selected ul,
+    #logselector>li.selected:not([data-logname="server"]) .action-menu {
+        display: block;
+    }
+
+    #logselector>li ul {
+        list-style-type: none;
+        padding: 0rem;
+        margin-top: 0.5rem;
+    }
+
+    #logselector>li ul li {
+        padding: 0.5rem;
+        background-color: var(--secondary-background-color);
+    }
+
+    #logselector>li ul li:hover:not(.active) {
+        cursor: pointer;
+    }
+
+    #logselector>li ul li:hover {
+        background-color: var(--tertiary-background-color);
+    }
+
+    #logselector>li ul li.active {
+        background-color: var(--background-color);
+    }
+
+    .fa-trash {
+        color: tomato;
+    }
+
+    .fa-copy {
+        color: darkorange;
     }
 </style>
 
 <script>
 
     function formatTime(timedate) {
-        // Take a date string like this: 1722243137281 (Which is a python time.time() * 1000 output)
+        // Take a date string like this: 1722243137281 (Which is a Python time.time() * 1000 output)
         // And return a string like this: 23/07/2024 21:11:14:580
         let date = new Date(timedate);
-        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}`;
+
+        let day = String(date.getDate()).padStart(2, '0');
+        let month = String(date.getMonth() + 1).padStart(2, '0');
+        let year = date.getFullYear();
+        let hours = String(date.getHours()).padStart(2, '0');
+        let minutes = String(date.getMinutes()).padStart(2, '0');
+        let seconds = String(date.getSeconds()).padStart(2, '0');
+        let milliseconds = String(date.getMilliseconds()).padStart(3, '0');
+
+        return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}:${milliseconds}`;
+    }
+
+    function processAction(action, identifier) {
+        console.log(action, identifier);
+        if (action === "delete") {
+            if (confirm("Are you sure you want to delete this log?")) {
+                $.ajax({
+                    url: `/api/logs/${identifier}`,
+                    type: "DELETE",
+                    beforeSend: () => {
+                        spaManager.setLoading(true)
+                    },
+                    success: () => {
+                        alertManager.alert("Log Deleted", "Log: " + identifier);
+                        if ($(`#logselector li[data-logname="${identifier}"] .active`).length) {
+                            loadLog("server/ui");
+                        }
+                        $(`#logselector li[data-logname="${identifier}"]`).remove();
+                    },
+                    complete: () => {
+                        spaManager.setLoading(false)
+                    },
+                    error: (err) => {
+                        alert("An error occurred while deleting the log: " + err.responseText);
+                    }
+                });
+            }
+        } else if (action === "copy") {
+            navigator.clipboard.writeText(`access_log /etc/nginxadminui/logs/${identifier}/access.log;\nerror_log /etc/nginxadminui/logs/${identifier}/error.log;`);
+            alertManager.alert("Copied!", "Command has been copied to clipboard.", { duration: 1500 });
+        }
+    }
+
+
+    function loadLog(logname) {
+        $.ajax({
+            url: `/api/logs/${logname}.log`,
+            type: "GET",
+            async: false,
+            beforeSend: () => {
+                spaManager.setLoading(true)
+            },
+            success: (data) => {
+                $("table tbody, table thead").empty();
+                data.headers.forEach((header) => {
+                    $("thead").append(`<td>${header}</td>`);
+                });
+                data.data.forEach((log) => {
+                    td_data = "";
+                    Object.keys(log).forEach((key) => {
+                        if (key === "python_time") {
+                            td_data += `<td>${formatTime(parseInt(log[key]))}</td>`;
+                            return;
+                        } else if (key === "importance") {
+                            return;
+                        }
+                        td_data += `<td>${log[key]}</td>`;
+                    });
+
+                    $("table tbody").append(`
+                            <tr class="severity-${log.importance}">
+                                ${td_data}
+                            </tr>
+                        `);
+                });
+
+                $("#logselector li ul li").removeClass("active");
+                $(`#logselector li[data-logname="${logname.split("/")[0]}"] ul li[data-link="${logname}"]`).addClass("active");
+            },
+            complete: () => {
+                spaManager.setLoading(false)
+            },
+            error: (err) => {
+                alert("An error occurred while fetching log: " + err.responseText);
+            }
+        });
+    }
+
+    function addLog(name, typeslist) {
+        $("#addlogname").before(`
+                    <li data-logname="${name}">
+                        <div>
+                            <h4>${name}</h4>
+                            <div class="action-menu">
+                                <i data-action="delete" data-id="${name}" class="fa-solid fa-trash"></i>
+                                <i data-action="copy" data-id="${name}" class="fa-solid fa-copy"></i>
+                            </div>
+                        </div>
+                        <ul></ul>
+                    </li>`);
+        typeslist.forEach((type) => {
+            $(`#logselector li[data-logname="${name}"] ul`).append(`<li data-link="${name}/${type}">${type}.log</li>`);
+        });
+
+        $(`#logselector li[data-logname="${name}"] i[data-action="copy"]`).on("click", () => {
+            processAction("copy", name);
+        });
+
+        $(`#logselector li[data-logname="${name}"] i[data-action="delete"]`).on("click", () => {
+            processAction("delete", name);
+        });
+    }
+
+    function createLogLinks() {
+        $("#logselector li[data-logname]").each((index, element) => {
+            $(element).off("click");
+            $(element).on("click", () => {
+                if ($(element).hasClass("selected")) {
+                    return;
+                }
+                $("#logselector>li").removeClass("selected");
+                $(element).addClass("selected");
+            });
+
+            $(element).find("ul li").each((index, element) => {
+                $(element).off("click");
+                $(element).on("click", () => {
+                    if ($(element).hasClass("active")) {
+                        return;
+                    }
+                    loadLog($(element).attr("data-link"));
+                });
+            });
+        });
     }
 
     $(document).on("NAUIPageLoaded", () => {
+        $("#addlogname").on("click", () => {
+            newlogname = prompt("Enter the name of the new log (e.g example.com)");
+            if (!newlogname) {
+                return;
+            }
+
+            $.ajax({
+                url: "/api/logs",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    "name": newlogname
+                }),
+                beforeSend: () => {
+                    spaManager.setLoading(true)
+                },
+                success: (data) => {
+                    alertManager.alert("Log Created", "Log: " + newlogname);
+                    addLog(newlogname, data.types);
+                    createLogLinks();
+                },
+                complete: () => {
+                    spaManager.setLoading(false)
+                },
+                error: (err) => {
+                    alert("An error occurred while creating the new log: " + err.responseText);
+                }
+            });
+
+        });
 
         $.ajax({
             url: "/api/logs",
@@ -55,28 +320,36 @@
                 spaManager.setLoading(true)
             },
             success: (data) => {
-                data.forEach((log) => {
-                    let severityClass = "severity-" + log.importance;
-                    $("#log-holder").append(`<tr class="${severityClass}"><td>${formatTime(Number(log.id))}</td><td>${log.value}</td></tr>`)
-                })
+                Object.keys(data).forEach((logname) => {
+                    addLog(logname, data[logname]);
+                });
             },
             complete: () => {
+                createLogLinks();
+                loadLog("server/ui");
+                $(`#logselector li[data-logname="server"]`).addClass("selected");
                 spaManager.setLoading(false)
             },
             error: (err) => {
-                alert("An error occurred while fetching logs: " + err.responseText);
+                alert("An error occurred while fetching log names: " + err.responseText);
             }
         });
-
     });
 
 </script>
 
-<table>
-    <thead>
-        <td id="time-log-header">Time</td>
-        <td>Message</td>
-    </thead>
-    <tbody id="log-holder">
-    </tbody>
-</table>
+<div id="container">
+    <nav>
+        <ul id="logselector">
+            <li data-action="add" id="addlogname">
+                <i class="fa-solid fa-plus"></i>
+            </li>
+        </ul>
+    </nav>
+    <table>
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>

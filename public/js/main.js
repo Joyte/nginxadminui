@@ -130,7 +130,62 @@ class SinglePageApplicationManager {
     }
 }
 
+class AlertManager {
+    init() {
+        this.container = $("#alerts")[0];
+    }
+
+    alert(header, message, options) {
+        if (typeof options != "object") {
+            options = {};
+        }
+
+        let {
+            duration = 5000,
+            color = "var(--success-color)",
+            text = "var(--text-color)",
+        } = options;
+
+        var alert = document.createElement("article");
+        var alertTitle = document.createElement("h3");
+        var alertMessage = document.createElement("p");
+
+        alertTitle.innerHTML = header;
+        alertMessage.innerHTML = message;
+
+        // Colors for ::after
+        alert.style.setProperty("--progressbar-color", color);
+        alert.style.setProperty("--progressbar-width", "0%");
+        alertTitle.style.color = text;
+        alertMessage.style.color = text;
+
+        alert.appendChild(alertTitle);
+        alert.appendChild(alertMessage);
+
+        // Use :after to create a loading bar to show how long the alert will be displayed
+
+        this.container.prepend(alert);
+
+        function updateProgress() {
+            var width = parseInt(
+                alert.style.getPropertyValue("--progressbar-width")
+            );
+            width = width + 1;
+            alert.style.setProperty("--progressbar-width", width + "%");
+            if (width < 100) {
+                setTimeout(updateProgress, duration / 100);
+            } else {
+                alert.remove();
+            }
+        }
+
+        updateProgress();
+    }
+}
+
 const spaManager = new SinglePageApplicationManager();
+const alertManager = new AlertManager();
 document.addEventListener("DOMContentLoaded", function () {
     spaManager.init();
+    alertManager.init();
 });

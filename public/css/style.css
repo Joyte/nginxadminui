@@ -135,14 +135,56 @@ main {
     flex-direction: column;
 }
 
-.credit {
+#credit {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 1rem;
     font-size: 1.3rem;
+    text-decoration: none;
 }
 
-.credit a {
-    text-decoration: none;
+#credit i {
+    margin: 0.5rem;
+}
+
+#credit:hover {
+    cursor: pointer;
+    background-color: var(--tertiary-background-color);
+}
+
+#alerts {
+    display: flex;
+    max-height: 280px;
+    overflow-y: scroll;
+    justify-content: flex-start;
+    flex-direction: column;
+    align-items: center;
+    border-top: 5px solid var(--background-color);
+    border-bottom: 5px solid var(--background-color);
+}
+
+#alerts article {
+    z-index: 1;
+    position: relative;
+    width: 100%;
+    text-align: center;
+    min-height: 50px;
+    max-height: 70px;
+    border-top: 1px solid var(--background-color);
+    border-bottom: 1px solid var(--background-color);
+}
+
+#alerts article::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 100%;
+    display: inline-block;
+    z-index: -1;
+
+    /* The below elements are set using JS */
+    background: var(--progressbar-color);
+    width: var(--progressbar-width);
 }

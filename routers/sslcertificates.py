@@ -42,10 +42,12 @@ async def create_sslcertificate(
             status_code=400,
         )
 
+    valid_domains = sslcertificates.get_certificate(identifier)["valid_sites"]
+
     db.add(
         Logs(
             importance=1,
-            value=f"Created a new SSL certificate with identifier `{identifier}`",
+            value=f"Created a new SSL certificate with identifier `{identifier}` for the following domains: {', '.join(valid_domains)}",
         )
     )
 
@@ -54,24 +56,28 @@ async def create_sslcertificate(
         content={
             "message": "Certificate created successfully.",
             "identifier": "identifier",
+            "valid_domains": valid_domains,
         },
     )
 
 
 @sslcertificatesapi.put("")
 async def generate_sslcertificate(domain: Domain, db: Session = Depends(get_db)):
-    sslcertificates.generate_certificate(domain.domain)
+    identifier = sslcertificates.generate_certificate(domain.domain)
 
     db.add(
         Logs(
             importance=1,
-            value=f"Generated self-signed SSL certificate for `{domain.domain}`",
+            value=f"Generated self-signed SSL certificate for `{domain.domain}`, with identifier `{identifier}`",
         )
     )
 
     db.commit()
     return JSONResponse(
-        content={"message": "Certificate generated successfully."},
+        content={
+            "message": "Certificate generated successfully.",
+            "identifier": identifier,
+        },
     )
 
 

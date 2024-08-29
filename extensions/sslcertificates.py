@@ -10,7 +10,7 @@ class SSLCertificates:
     """
 
     def __init__(self):
-        self.ssl_root = os.getenv("SSL_ROOT", "/var/www/certificates")
+        self.ssl_root = os.getenv("SSL_ROOT", "/etc/nginxadminui/certificates")
 
     def list_certificates(self):
         """

@@ -243,7 +243,7 @@
 
     if (typeof updateHosts === 'undefined') {
         var updateHosts = () => {
-            $("article").remove();
+            $("main article").remove();
             $.ajax({
                 url: '/api/hosts',
                 beforeSend: () => {
@@ -319,6 +319,7 @@
                         },
                         success: (data) => {
                             updateHosts();
+                            alertManager.alert("Host Created", "Host: " + file.filename);
                             needToReload();
                         },
                         complete: () => {
