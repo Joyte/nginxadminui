@@ -1,7 +1,8 @@
 import os
 import re
-import codecs
 from extensions.apimodels import Log, LogType, LogErrorLevel
+from lz.reversal import reverse
+from io import DEFAULT_BUFFER_SIZE
 
 
 class LogException(Exception):
@@ -43,7 +44,7 @@ class LogManager:
         logs = []
         # Read log lines without reading the whole file
         with open(f"{self.log_dir}/{log.name}/{log.type.name}.log", "r") as f:
-            for i, line in enumerate(f):
+            for i, line in enumerate(reverse(f)):
                 if i < offset:
                     continue
                 logs.append(line)

@@ -11,6 +11,7 @@ from extensions.apimodels import (
 )
 from extensions.logmanager import LogManager, LogException
 
+
 logs = APIRouter(
     prefix="/api/logs",
     tags=["Logs API"],

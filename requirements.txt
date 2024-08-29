@@ -6,3 +6,4 @@ sqlalchemy
 pymysql
 python-multipart
 pyopenssl
+lz

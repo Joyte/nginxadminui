@@ -6,39 +6,39 @@
         margin: 2rem;
     }
 
-    article {
+    main article {
         width: 225px;
         height: 225px;
         margin: 10px;
         box-sizing: border-box;
     }
 
-    article.file {
+    main article.file {
         background-color: var(--tertiary-background-color);
     }
 
-    article:not(.file) {
+    main article:not(.file) {
         background-color: var(--secondary-background-color);
     }
 
-    article:hover {
+    main article:hover {
         cursor: pointer;
         transform: scale(1.05);
     }
 
-    article.file:hover {
+    main article.file:hover {
         border: 2px solid blue;
     }
 
-    article.file.selected {
+    main article.file.selected {
         border: 2px solid blue;
     }
 
-    article.file.selected:hover {
+    main article.file.selected:hover {
         border: 2px solid blue;
     }
 
-    article h1 {
+    main article h1 {
         margin: 0.5rem;
         font-size: 1.5em;
         text-overflow: ellipsis;
@@ -47,13 +47,13 @@
         overflow: scroll;
     }
 
-    article div {
+    main article div {
         display: flex;
         justify-content: center;
         pointer-events: none;
     }
 
-    article div i {
+    main article div i {
         font-size: 8em;
         margin-top: 1.5rem;
     }
