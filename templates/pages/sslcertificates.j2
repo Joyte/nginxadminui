@@ -108,7 +108,7 @@
                 });
             }
         } else if (action === "copy") {
-            navigator.clipboard.writeText(`ssl_certificate /var/www/certificates/${identifier}/fullchain.pem;\nssl_certificate_key /var/www/certificates/${identifier}/privkey.pem;`);
+            navigator.clipboard.writeText(`ssl_certificate /etc/nginxadminui/certificates/${identifier}/fullchain.pem;\nssl_certificate_key /etc/nginxadminui/certificates/${identifier}/privkey.pem;`);
             alertManager.alert("Copied!", "Config has been copied to clipboard.", { duration: 1500 });
         }
     }

@@ -5,10 +5,10 @@ services:
       container_name: nginxadminui
       image: joyte/nginxadminui:latest
       volumes:
-         - "./sites_available:/etc/nginx/sites-available"
-         - "./html:/var/www/html"
-         - "./certificates:/etc/nginxadminui/certificates"
-         - "./logs:/etc/nginxadminui/logs"
+         - "./dataa/sites_available:/etc/nginx/sites-available"
+         - "./data/html:/var/www/html"
+         - "./data/certificates:/etc/nginxadminui/certificates"
+         - "./data/logs:/etc/nginxadminui/logs"
       restart: always
       ports:
          - "80:80"
