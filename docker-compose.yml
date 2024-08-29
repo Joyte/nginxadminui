@@ -5,6 +5,8 @@ services:
       container_name: nginxadminui
       image: joyte/nginxadminui:latest
       volumes:
+         - "/etc/timezone:/etc/timezone:ro"
+         - "/etc/localtime:/etc/localtime:ro"
          - "./data/sites_available:/etc/nginx/sites-available"
          - "./data/html:/var/www/html"
          - "./data/certificates:/etc/nginxadminui/certificates"
@@ -22,7 +24,7 @@ services:
       container_name: php-fpm
       image: php:fpm
       volumes:
-         - "./html:/var/www/html"
+         - "./data/html:/var/www/html"
       restart: always
 
    db:
