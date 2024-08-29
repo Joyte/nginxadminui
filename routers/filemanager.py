@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile
 from starlette.responses import JSONResponse
 from extensions.filemanager import Filemanager
 from extensions.database import get_db, Session, Logs
-from extensions.apimodels import FilesList
+from extensions.apimodels import FilesList, Command
 
 filemanagerapi = APIRouter(
     prefix="/api/filemanager",
@@ -20,6 +20,34 @@ async def list_files(path: str = ""):
             content={"message": "Invalid path."},
         )
     return filemanager.list_files(path)
+
+
+@filemanagerapi.get("/download/{path:path}")
+async def download_file(path: str):
+    file = filemanager.get_file(path)
+    if file is None:
+        return JSONResponse(
+            status_code=404,
+            content={"message": "File not found."},
+        )
+    return file
+
+
+@filemanagerapi.post("/runcommand/{path:path}")
+async def run_command(path: str, command: Command, db: Session = Depends(get_db)):
+    response = filemanager.run_command(path, command.command)
+
+    db.add(
+        Logs(
+            importance=1,
+            value=f"Ran a command `{command}` at `{path}` with response `{response}`",
+        )
+    )
+
+    db.commit()
+    return JSONResponse(
+        content={"message": "Command ran.", "response": response},
+    )
 
 
 @filemanagerapi.post("/unzip/{path:path}")

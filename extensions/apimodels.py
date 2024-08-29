@@ -7,11 +7,9 @@ class pagecontent(str, Enum):
     home = "home"
     hosts = "hosts"
     filemanager = "filemanager"
-    accesslists = "accesslists"
     sslcertificates = "sslcertificates"
-    users = "users"
     logs = "logs"
-    settings = "settings"
+    php = "php"
 
 
 class CreateSiteContent(BaseModel):
@@ -80,6 +78,10 @@ class LogErrorLevel(str, Enum):
     crit = "3"
     alert = "3"
     emerg = "3"
+
+
+class Command(BaseModel):
+    command: str
 
 
 class Log(BaseModel):

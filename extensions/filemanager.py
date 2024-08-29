@@ -90,3 +90,20 @@ class Filemanager:
             )
         except subprocess.CalledProcessError as e:
             return e.stderr.decode()
+
+    def run_command(self, path: str, command: str):
+        """
+        Runs a command in the provided path and returns the output (whether it's an error or not).
+        """
+        try:
+            response = subprocess.run(
+                command.split(" "),
+                cwd=f"{self.www_root}/{path}",
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+        except subprocess.CalledProcessError as e:
+            return e.stderr.decode()
+
+        return response.stdout.decode()

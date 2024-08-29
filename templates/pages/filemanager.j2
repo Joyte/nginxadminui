@@ -231,6 +231,7 @@
                 $("#article-container").append(`<article id="delete" data-action="delete"><h1>Delete Folder</h1><hr><div><i class="fa-solid fa-trash"></i></div></article>`)
                 $("#article-container").append(`<article id="unzip" data-action="unzip"><h1>Unzip Files</h1><hr><div><i class="fa-solid fa-archive"></i></div></article>`)
                 $("#article-container").append(`<article data-action="copypath"><h1>Copy Path</h1><hr><div><i class="fa-solid fa-copy"></i></div></article>`)
+                $("#article-container").append(`<article data-action="runcommand"><h1>Run Command</h1><hr><div><i class="fa-solid fa-terminal"></i></div></article>`)
             },
             complete: () => {
                 $("#unzip").hide()
@@ -275,6 +276,30 @@
                         const path = new URLSearchParams(window.location.search).get('path');
                         navigator.clipboard.writeText("/var/www/html/" + (path ? path + "/" : ""))
                         alertManager.alert("Copied Path", "Path copied to clipboard", { duration: 1500 })
+                    } else if ($(e.target).data("action") === "runcommand") {
+                        const path = new URLSearchParams(window.location.search).get('path');
+                        const command = prompt("Enter command to run in this directory:");
+                        if (command) {
+                            $.ajax({
+                                url: "/api/filemanager/runcommand/" + (path ? path : ""),
+                                type: "POST",
+                                data: JSON.stringify({ "command": command }),
+                                contentType: "application/json",
+                                beforeSend: () => {
+                                    spaManager.setLoading(true)
+                                },
+                                success: (data) => {
+                                    alertManager.alert("Command Run", "Command ran successfully", { duration: 1500 })
+                                    alert("Response: " + data.response)
+                                },
+                                complete: () => {
+                                    spaManager.setLoading(false)
+                                },
+                                error: (err) => {
+                                    alert("An error occurred while running command: " + err.responseText);
+                                }
+                            });
+                        }
                     }
                 })
 

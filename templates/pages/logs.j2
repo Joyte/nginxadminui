@@ -211,7 +211,9 @@
                         } else if (key === "importance") {
                             return;
                         }
-                        td_data += `<td>${log[key]}</td>`;
+                        let td = document.createElement("td");
+                        $(td).text(log[key]);
+                        td_data += td.outerHTML;
                     });
 
                     $("table tbody").append(`
