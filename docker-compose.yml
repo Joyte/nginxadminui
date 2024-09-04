@@ -17,16 +17,7 @@ services:
          - "81:81"
          - "443:443"
       depends_on:
-         - php-fpm
          - db
-
-   php-fpm:
-      container_name: php-fpm
-      image: php:fpm
-      volumes:
-         - "./data/html:/var/www/html"
-      restart: always
-
    db:
       image: mariadb:latest
       container_name: mariadb

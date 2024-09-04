@@ -1,7 +1,7 @@
 FROM ubuntu:24.10
 
 # Container essentials
-RUN apt update -y && apt install -y python3 python3-venv nginx 7zip
+RUN apt update -y && apt install -y python3 python3-venv nginx 7zip php php-fpm php-mbstring php-xml php-zip php-curl php-mysql php-sqlite3 php-pgsql php-redis php-memcached php-imagick php-gd php-intl php-bcmath php-ldap php-xmlrpc php-soap php-ssh2 php-pear php-dev
 
 # Install PHP composer
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer

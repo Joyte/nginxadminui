@@ -33,14 +33,14 @@ async def download_file(path: str):
     return file
 
 
-@filemanagerapi.post("/runcommand/{path:path}")
-async def run_command(path: str, command: Command, db: Session = Depends(get_db)):
-    response = filemanager.run_command(path, command.command)
+@filemanagerapi.post("/composer/{path:path}")
+async def composer(path: str, db: Session = Depends(get_db)):
+    response = filemanager.composer(path)
 
     db.add(
         Logs(
             importance=1,
-            value=f"Ran a command `{command}` at `{path}` with response `{response}`",
+            value=f"Ran composer at `{path}` with response `{response}`",
         )
     )
 

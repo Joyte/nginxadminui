@@ -231,7 +231,7 @@
                 $("#article-container").append(`<article id="delete" data-action="delete"><h1>Delete Folder</h1><hr><div><i class="fa-solid fa-trash"></i></div></article>`)
                 $("#article-container").append(`<article id="unzip" data-action="unzip"><h1>Unzip Files</h1><hr><div><i class="fa-solid fa-archive"></i></div></article>`)
                 $("#article-container").append(`<article data-action="copypath"><h1>Copy Path</h1><hr><div><i class="fa-solid fa-copy"></i></div></article>`)
-                $("#article-container").append(`<article data-action="runcommand"><h1>Run Command</h1><hr><div><i class="fa-solid fa-terminal"></i></div></article>`)
+                $("#article-container").append(`<article data-action="runcomposer"><h1>Composer Install</h1><hr><div><i class="fa-solid fa-terminal"></i></div></article>`)
             },
             complete: () => {
                 $("#unzip").hide()
@@ -240,11 +240,19 @@
                     $("#delete").hide()
                 }
 
+                // Check if composer.json exists in the current directory
+                if ($("article.file").map((i, e) => $(e).data("name")).get().includes("composer.json")) {
+                    $("article[data-action='runcomposer']").show()
+                } else {
+                    $("article[data-action='runcomposer']").hide()
+                }
+
                 $("article.file").click((e) => {
                     $(e.target).toggleClass("selected")
 
-                    // Check filenames to see if all selected files are zips
-                    if ($("article.file.selected").length > 0 && $("article.file.selected").map((i, e) => $(e).data("name")).get().every((name) => name.endsWith(".zip"))) {
+                    // Check filenames to see if all selected files are zips or .tar.gz files
+                    filenames = $("article.file.selected").map((i, e) => $(e).data("name")).get();
+                    if ($("article.file.selected").length > 0 && filenames.every((filename) => filename.endsWith(".zip") || filename.endsWith(".tar.gz") || filename.endsWith(".tar"))) {
                         $("#unzip").show();
                     } else {
                         $("#unzip").hide();
@@ -276,30 +284,24 @@
                         const path = new URLSearchParams(window.location.search).get('path');
                         navigator.clipboard.writeText("/var/www/html/" + (path ? path + "/" : ""))
                         alertManager.alert("Copied Path", "Path copied to clipboard", { duration: 1500 })
-                    } else if ($(e.target).data("action") === "runcommand") {
+                    } else if ($(e.target).data("action") === "runcomposer") {
                         const path = new URLSearchParams(window.location.search).get('path');
-                        const command = prompt("Enter command to run in this directory:");
-                        if (command) {
-                            $.ajax({
-                                url: "/api/filemanager/runcommand/" + (path ? path : ""),
-                                type: "POST",
-                                data: JSON.stringify({ "command": command }),
-                                contentType: "application/json",
-                                beforeSend: () => {
-                                    spaManager.setLoading(true)
-                                },
-                                success: (data) => {
-                                    alertManager.alert("Command Run", "Command ran successfully", { duration: 1500 })
-                                    alert("Response: " + data.response)
-                                },
-                                complete: () => {
-                                    spaManager.setLoading(false)
-                                },
-                                error: (err) => {
-                                    alert("An error occurred while running command: " + err.responseText);
-                                }
-                            });
-                        }
+                        $.ajax({
+                            url: "/api/filemanager/composer/" + (path ? path : ""),
+                            type: "POST",
+                            beforeSend: () => {
+                                spaManager.setLoading(true)
+                            },
+                            success: (data) => {
+                                alertManager.alert("Composer Install", "Composer install successful", { duration: 1500 })
+                            },
+                            complete: () => {
+                                spaManager.setLoading(false)
+                            },
+                            error: (err) => {
+                                alert("An error occurred while running composer: " + err.responseText);
+                            }
+                        });
                     }
                 })
 

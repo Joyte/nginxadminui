@@ -3,11 +3,14 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
 import socket
 import time
+import os
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 from sqlalchemy import Integer, Column, Boolean, Text, String
 
 DATABASE_URL = "mysql+pymysql://nginxadminui:cuzw2pKMsEjmeuLb@db/main_db"
-LOCAL_DATABASE_URL = "mysql+pymysql://nginxadminui:cuzw2pKMsEjmeuLb@localhost/main_db"
+LOCAL_DATABASE_URL = os.getenv(
+    "DATABASE_URL", "mysql+pymysql://nginxadminui:cuzw2pKMsEjmeuLb@localhost/main_db"
+)
 
 
 # Test the database connection using socket

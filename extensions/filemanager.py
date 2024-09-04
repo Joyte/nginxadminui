@@ -91,13 +91,13 @@ class Filemanager:
         except subprocess.CalledProcessError as e:
             return e.stderr.decode()
 
-    def run_command(self, path: str, command: str):
+    def composer(self, path: str):
         """
-        Runs a command in the provided path and returns the output (whether it's an error or not).
+        Runs composer in the provided path.
         """
         try:
             response = subprocess.run(
-                command.split(" "),
+                ["composer", "install", "--no-dev"],
                 cwd=f"{self.www_root}/{path}",
                 check=True,
                 stdout=subprocess.PIPE,
