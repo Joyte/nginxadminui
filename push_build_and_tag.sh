@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# App name
+app_name="nginxadminui"
+username="joyte"
+
 # Push to github
 git push
 
@@ -7,10 +11,10 @@ git push
 latest_tag=$(git log -n1 --format="%h")
 
 # Docker build with :latest and :$latest_tag
-docker build -t joyte/nginxadminui:latest -t joyte/nginxadminui:$latest_tag .
+docker build -t $username/$app_name:latest -t $username/$app_name:$latest_tag .
 
 # Docker push both tags
-docker push joyte/nginxadminui:latest
-docker push joyte/nginxadminui:$latest_tag
+docker push $username/$app_name:latest
+docker push $username/$app_name:$latest_tag
 
 # Done
