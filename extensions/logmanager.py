@@ -54,8 +54,12 @@ class LogManager:
         parsed_logs = []
         for i, log_line in enumerate(logs):
             if log.type == LogType.error:
-                match = self.error_log_pattern.match(log_line)
-                parsed_line = match.groupdict()
+                try:
+                    match = self.error_log_pattern.match(log_line)
+                    parsed_line = match.groupdict()
+                except AttributeError:
+                    continue
+
                 parsed_line["importance"] = LogErrorLevel[
                     parsed_line["log_level"]
                 ].value
