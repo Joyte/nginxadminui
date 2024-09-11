@@ -53,9 +53,4 @@ RUN mkdir -p /etc/nginxadminui/logs /etc/nginxadminui/certificates
 EXPOSE 80 81 443
 
 # Start services: PHP-FPM, Nginx, and the Python application
-CMD service php${PHP_VERSION}-fpm start && \
-    nginx -g "daemon off;" && \
-    .venv/bin/python -m uvicorn 'main:app' \
-    --host=0.0.0.0 --port=81 \
-    --ssl-keyfile /app/privkey.pem --ssl-certfile /app/fullchain.pem \
-    --app-dir /app
+CMD sh /app/entrypoint.sh
