@@ -33,6 +33,22 @@ async def download_file(path: str):
     return file
 
 
+@filemanagerapi.put("/edit/{path:path}")
+async def edit_file(path: str, file: UploadFile, db: Session = Depends(get_db)):
+    filemanager.replace_file(path, file)
+
+    db.add(
+        Logs(
+            importance=1,
+            value=f"Edited a file named `{path}`",
+        )
+    )
+    db.commit()
+    return JSONResponse(
+        content={"message": "File edited successfully."},
+    )
+
+
 @filemanagerapi.post("/composer/{path:path}")
 async def composer(path: str, db: Session = Depends(get_db)):
     response = filemanager.composer(path)

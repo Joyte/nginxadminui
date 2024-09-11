@@ -192,6 +192,79 @@
         });
     }
 
+    function runComposer() {
+        const path = new URLSearchParams(window.location.search).get('path');
+        $.ajax({
+            url: "/api/filemanager/composer/" + (path ? path : ""),
+            type: "POST",
+            beforeSend: () => {
+                spaManager.setLoading(true)
+            },
+            success: (data) => {
+                alertManager.alert("Composer Install", "Composer install successful", { duration: 1500 })
+            },
+            complete: () => {
+                spaManager.setLoading(false)
+            },
+            error: (err) => {
+                alert("An error occurred while running composer: " + err.responseText);
+            }
+        });
+    }
+
+    function editFile(filename) {
+        const path = new URLSearchParams(window.location.search).get('path');
+        let monacoManager = new MonacoEditorManager();
+        $.ajax({
+            url: "/api/filemanager/download/" + (path ? path + "/" : "") + filename,
+            type: "GET",
+            beforeSend: () => {
+                spaManager.setLoading(true)
+            },
+            success: (data) => {
+
+                monacoManager.createModalEditor({
+                    filename: filename,
+                    content: data,
+                    saveCallback: (data) => {
+                        // Create UploadFile object for FastAPI
+                        const file = new File([data.content], data.filename, { type: "text/plain" });
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        return $.ajax({
+                            url: "/api/filemanager/edit/" + (path ? path + "/" : "") + filename,
+                            type: "PUT",
+                            data: formData,
+                            contentType: false,
+                            processData: false,
+                            beforeSend: () => {
+                                spaManager.setLoading(true)
+                            },
+                            success: (data) => {
+                                spaManager.goToPage("filemanager", { "path": (path ? path : "") })
+                                monacoManager.dismissEditor()
+                            },
+                            complete: () => {
+                                spaManager.setLoading(false)
+                            },
+                            error: (err) => {
+                                alert("An error occurred while editing file: " + err.responseText);
+                            }
+                        });
+                    }
+                })
+            },
+            complete: () => {
+                spaManager.setLoading(false)
+            },
+            error: (err) => {
+                alert("An error occurred while fetching file: " + err.responseText);
+            }
+        });
+
+    }
+
     $(document).on("NAUIPageLoaded", () => {
 
         const path = new URLSearchParams(window.location.search).get('path');
@@ -228,16 +301,18 @@
 
                 $("#article-container").append(`<article data-action="upload"><h1>Upload</h1><hr><div><i class="fa-solid fa-plus"></i></div></article>`)
                 $("#article-container").append(`<article data-action="createfolder"><h1>Create Folder</h1><hr><div><i class="fa-solid fa-folder-plus"></i></div></article>`)
-                $("#article-container").append(`<article id="delete" data-action="delete"><h1>Delete Folder</h1><hr><div><i class="fa-solid fa-trash"></i></div></article>`)
-                $("#article-container").append(`<article id="unzip" data-action="unzip"><h1>Unzip Files</h1><hr><div><i class="fa-solid fa-archive"></i></div></article>`)
+                $("#article-container").append(`<article data-action="delete"><h1>Delete Folder</h1><hr><div><i class="fa-solid fa-trash"></i></div></article>`)
+                $("#article-container").append(`<article data-action="unzip"><h1>Unzip Files</h1><hr><div><i class="fa-solid fa-archive"></i></div></article>`)
                 $("#article-container").append(`<article data-action="copypath"><h1>Copy Path</h1><hr><div><i class="fa-solid fa-copy"></i></div></article>`)
                 $("#article-container").append(`<article data-action="runcomposer"><h1>Composer Install</h1><hr><div><i class="fa-solid fa-terminal"></i></div></article>`)
+                $("#article-container").append(`<article data-action="edit"><h1>Edit File</h1><hr><div><i class="fa-solid fa-pencil"></i></div></article>`)
             },
             complete: () => {
-                $("#unzip").hide()
+                $("article[data-action='unzip']").hide()
+                $("article[data-action='edit']").hide()
 
                 if (path === null) {
-                    $("#delete").hide()
+                    $("article[data-action='delete']").hide()
                 }
 
                 // Check if composer.json exists in the current directory
@@ -250,58 +325,80 @@
                 $("article.file").click((e) => {
                     $(e.target).toggleClass("selected")
 
-                    // Check filenames to see if all selected files are zips or .tar.gz files
+                    // Check filenames to enable specific actions
                     filenames = $("article.file.selected").map((i, e) => $(e).data("name")).get();
-                    if ($("article.file.selected").length > 0 && filenames.every((filename) => filename.endsWith(".zip") || filename.endsWith(".tar.gz") || filename.endsWith(".tar"))) {
+                    if (filenames.length > 0 && filenames.every((filename) => filename.endsWith(".zip") || filename.endsWith(".tar.gz") || filename.endsWith(".tar"))) {
                         $("#unzip").show();
                     } else {
                         $("#unzip").hide();
                     }
 
-                    if ($("article.file.selected").length > 0) {
+                    if (filenames.length > 0) {
                         if (path === null) {
-                            $("#delete").show()
+                            $("article[data-action='delete']").show()
                         }
-                        $("#delete").children("h1").text("Delete Files")
+                        let plural = filenames.length > 1 ? "s" : ""
+                        $("article[data-action='delete']").children("h1").text(`Delete File${plural}`)
                     } else {
                         if (path === null) {
-                            $("#delete").hide()
+                            $("article[data-action='delete']").hide()
                         } else {
-                            $("#delete").show()
+                            $("article[data-action='delete']").show()
                         }
-                        $("#delete").children("h1").text("Delete Folder")
+                        $("article[data-action='delete']").children("h1").text("Delete Folder")
+                    }
+
+
+                    if (filenames.length === 1) {
+                        extension = filenames[0].split('.').pop();
+                        switch (extension) {
+                            case "env":
+                            case "json":
+                            case "txt":
+                            case "yml":
+                            case "yaml":
+                            case "conf":
+                            case "ini":
+                                $("article[data-action='edit']").show()
+                                break;
+                            default:
+                                $("article[data-action='edit']").hide()
+                                break;
+                        }
+                    } else {
+                        $("article[data-action='edit']").hide()
                     }
                 })
 
                 $("article[data-action]").click((e) => {
-                    if ($(e.target).data("action") === "upload") {
-                        uploadFiles()
-                    } else if ($(e.target).data("action") === "ascend") {
-                        spaManager.goToPage("filemanager", { "path": path.split("/").slice(0, -1).join("/") })
-                    } else if ($(e.target).data("action") === "createfolder") {
-                        createFolder()
-                    } else if ($(e.target).data("action") === "copypath") {
-                        const path = new URLSearchParams(window.location.search).get('path');
-                        navigator.clipboard.writeText("/var/www/html/" + (path ? path + "/" : ""))
-                        alertManager.alert("Copied Path", "Path copied to clipboard", { duration: 1500 })
-                    } else if ($(e.target).data("action") === "runcomposer") {
-                        const path = new URLSearchParams(window.location.search).get('path');
-                        $.ajax({
-                            url: "/api/filemanager/composer/" + (path ? path : ""),
-                            type: "POST",
-                            beforeSend: () => {
-                                spaManager.setLoading(true)
-                            },
-                            success: (data) => {
-                                alertManager.alert("Composer Install", "Composer install successful", { duration: 1500 })
-                            },
-                            complete: () => {
-                                spaManager.setLoading(false)
-                            },
-                            error: (err) => {
-                                alert("An error occurred while running composer: " + err.responseText);
+                    switch ($(e.target).data("action")) {
+                        case "delete":
+                            if ($("article.file.selected").length > 0) {
+                                deleteSelectedFiles()
+                            } else {
+                                deleteFolder()
                             }
-                        });
+                            break;
+                        case "upload":
+                            uploadFiles()
+                            break;
+                        case "ascend":
+                            spaManager.goToPage("filemanager", { "path": path.split("/").slice(0, -1).join("/") })
+                            break;
+                        case "createfolder":
+                            createFolder()
+                            break;
+                        case "copypath":
+                            const path = new URLSearchParams(window.location.search).get('path');
+                            navigator.clipboard.writeText("/var/www/html/" + (path ? path + "/" : ""))
+                            alertManager.alert("Copied Path", "Path copied to clipboard", { duration: 1500 })
+                            break;
+                        case "runcomposer":
+                            runComposer()
+                            break;
+                        case "edit":
+                            editFile($("article.file.selected").data("name"))
+                            break;
                     }
                 })
 

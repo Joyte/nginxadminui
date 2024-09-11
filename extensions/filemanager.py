@@ -36,6 +36,22 @@ class Filemanager:
         except FileNotFoundError:
             return None
 
+    def replace_file(self, path: str, content: UploadFile):
+        """
+        Replaces the content of a file in the www_root.
+        """
+        if path.endswith(content.filename):
+            with open(f"{self.www_root}/{path}", "w") as f:
+                f.write(content.file.read().decode())
+        else:
+            with open(
+                f"{self.www_root}/{path[:len(path.split('/'))-1]}/{content.filename}",
+                "w",
+            ) as f:
+                f.write(content.file.read().decode())
+
+            os.remove(f"{self.www_root}/{path}")
+
     def delete_file(self, path: str, name: str):
         """
         Deletes a file in the www_root, centered around the provided path.

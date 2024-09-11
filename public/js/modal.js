@@ -183,6 +183,36 @@ class MonacoEditorManager {
         );
     }
 
+    createModalEditor(options) {
+        if (this.editor) {
+            this.dismissEditor();
+        }
+
+        // Create modal overlay
+        let modalOverlay = document.createElement("div");
+        modalOverlay.className = "monaco-modal";
+
+        // Create modal content container
+        let modalContent = document.createElement("div");
+        modalContent.className = "monaco-modal-content";
+
+        // Use the existing createEditor method to setup the editor inside the modal content
+        this.createEditor(modalContent, options);
+
+        modalOverlay.appendChild(modalContent);
+        document.body.appendChild(modalOverlay);
+
+        // Overwrite dismissEditor to also remove the modal overlay
+        this.dismissEditor = () => {
+            if (this.editor) {
+                this.editor.dispose();
+            }
+            if (modalOverlay) {
+                modalOverlay.remove();
+            }
+        };
+    }
+
     createDoubleModalEditor(optionsA, optionsB) {
         if (this.editor) {
             this.dismissEditor();
@@ -301,36 +331,6 @@ class MonacoEditorManager {
             saveFunc();
             this.checkSaveState();
         });
-    }
-
-    createModalEditor(options) {
-        if (this.editor) {
-            this.dismissEditor();
-        }
-
-        // Create modal overlay
-        let modalOverlay = document.createElement("div");
-        modalOverlay.className = "monaco-modal";
-
-        // Create modal content container
-        let modalContent = document.createElement("div");
-        modalContent.className = "monaco-modal-content";
-
-        // Use the existing createEditor method to setup the editor inside the modal content
-        this.createEditor(modalContent, options);
-
-        modalOverlay.appendChild(modalContent);
-        document.body.appendChild(modalOverlay);
-
-        // Overwrite dismissEditor to also remove the modal overlay
-        this.dismissEditor = () => {
-            if (this.editor) {
-                this.editor.dispose();
-            }
-            if (modalOverlay) {
-                modalOverlay.remove();
-            }
-        };
     }
 
     setupEditor(
