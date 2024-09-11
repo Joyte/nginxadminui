@@ -8,6 +8,7 @@ services:
          - "/etc/timezone:/etc/timezone:ro"
          - "/etc/localtime:/etc/localtime:ro"
          - "./data/sites_available:/etc/nginx/sites-available"
+         - "./data/sites_enabled:/etc/nginx/sites-enabled"
          - "./data/html:/var/www/html"
          - "./data/certificates:/etc/nginxadminui/certificates"
          - "./data/logs:/etc/nginxadminui/logs"
