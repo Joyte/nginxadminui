@@ -266,8 +266,7 @@
     }
 
     $(document).on("NAUIPageLoaded", () => {
-
-        const path = new URLSearchParams(window.location.search).get('path');
+        let path = new URLSearchParams(window.location.search).get('path');
 
         if (path) {
             $("#article-container").append(`<article data-action="ascend"><h1>${path}/..</h1><hr><div><i class="fa-solid fa-folder-tree"></i></div></article>`)
@@ -383,13 +382,14 @@
                             uploadFiles()
                             break;
                         case "ascend":
+                            path = new URLSearchParams(window.location.search).get('path');
                             spaManager.goToPage("filemanager", { "path": path.split("/").slice(0, -1).join("/") })
                             break;
                         case "createfolder":
                             createFolder()
                             break;
                         case "copypath":
-                            const path = new URLSearchParams(window.location.search).get('path');
+                            path = new URLSearchParams(window.location.search).get('path');
                             navigator.clipboard.writeText("/var/www/html/" + (path ? path + "/" : ""))
                             alertManager.alert("Copied Path", "Path copied to clipboard", { duration: 1500 })
                             break;
