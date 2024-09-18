@@ -265,8 +265,33 @@
 
     }
 
+    function unzipFiles() {
+        const files = $("article.file.selected").map((i, e) => $(e).data("name")).get();
+
+        $.ajax({
+            url: "/api/filemanager/unzip/" + (path ? path : ""),
+            type: "POST",
+            data: JSON.stringify({ "files": files }),
+            contentType: "application/json",
+            beforeSend: () => {
+                spaManager.setLoading(true)
+            },
+            success: (data) => {
+                spaManager.goToPage("filemanager", { "path": (path ? path : "") })
+            },
+            complete: () => {
+                spaManager.setLoading(false)
+            },
+            error: (err) => {
+                alert("An error occurred while unzipping files: " + err.responseText);
+            }
+        });
+    }
+
     $(document).on("NAUIPageLoaded", () => {
         let path = new URLSearchParams(window.location.search).get('path');
+        let validZipFiles = ["zip", "tar", "tar.gz", "tar.bz2", "tar.xz"];
+        let validEditFiles = ["env", "json", "txt", "yml", "yaml", "conf", "ini"];
 
         if (path) {
             $("#article-container").append(`<article data-action="ascend"><h1>${path}/..</h1><hr><div><i class="fa-solid fa-folder-tree"></i></div></article>`)
@@ -326,10 +351,10 @@
 
                     // Check filenames to enable specific actions
                     filenames = $("article.file.selected").map((i, e) => $(e).data("name")).get();
-                    if (filenames.length > 0 && filenames.every((filename) => filename.endsWith(".zip") || filename.endsWith(".tar.gz") || filename.endsWith(".tar"))) {
-                        $("#unzip").show();
+                    if (filenames.length === 1 && validZipFiles.includes(filenames[0].split('.').pop())) {
+                        $("article[data-action='unzip']").show();
                     } else {
-                        $("#unzip").hide();
+                        $("article[data-action='unzip']").hide();
                     }
 
                     if (filenames.length > 0) {
@@ -348,27 +373,13 @@
                     }
 
 
-                    if (filenames.length === 1) {
-                        extension = filenames[0].split('.').pop();
-                        switch (extension) {
-                            case "env":
-                            case "json":
-                            case "txt":
-                            case "yml":
-                            case "yaml":
-                            case "conf":
-                            case "ini":
-                                $("article[data-action='edit']").show()
-                                break;
-                            default:
-                                $("article[data-action='edit']").hide()
-                                break;
-                        }
+                    if (filenames.length === 1 && validEditFiles.includes(filenames[0].split('.').pop())) {
+                        $("article[data-action='edit']").show()
                     } else {
                         $("article[data-action='edit']").hide()
                     }
                 })
-
+                // Click event handlers
                 $("article[data-action]").click((e) => {
                     switch ($(e.target).data("action")) {
                         case "delete":
@@ -388,6 +399,9 @@
                         case "createfolder":
                             createFolder()
                             break;
+                        case "unzip":
+                            unzipFiles()
+                            break;
                         case "copypath":
                             path = new URLSearchParams(window.location.search).get('path');
                             navigator.clipboard.writeText("/var/www/html/" + (path ? path + "/" : ""))
@@ -405,37 +419,6 @@
                 $("article.directory").click((e) => {
                     spaManager.goToPage("filemanager", { "path": path ? path + "/" + $(e.target).data("name") : $(e.target).data("name") })
                 });
-
-                $("#delete").click((e) => {
-                    if ($("article.file.selected").length > 0) {
-                        deleteSelectedFiles()
-                    } else {
-                        deleteFolder()
-                    }
-                })
-
-                $("#unzip").click((e) => {
-                    const files = $("article.file.selected").map((i, e) => $(e).data("name")).get();
-
-                    $.ajax({
-                        url: "/api/filemanager/unzip/" + (path ? path : ""),
-                        type: "POST",
-                        data: JSON.stringify({ "files": files }),
-                        contentType: "application/json",
-                        beforeSend: () => {
-                            spaManager.setLoading(true)
-                        },
-                        success: (data) => {
-                            spaManager.goToPage("filemanager", { "path": (path ? path : "") })
-                        },
-                        complete: () => {
-                            spaManager.setLoading(false)
-                        },
-                        error: (err) => {
-                            alert("An error occurred while unzipping files: " + err.responseText);
-                        }
-                    });
-                })
 
                 spaManager.setLoading(false)
             },
