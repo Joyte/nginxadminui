@@ -267,6 +267,7 @@
 
     function unzipFiles() {
         const files = $("article.file.selected").map((i, e) => $(e).data("name")).get();
+        let path = new URLSearchParams(window.location.search).get('path');
 
         $.ajax({
             url: "/api/filemanager/unzip/" + (path ? path : ""),
